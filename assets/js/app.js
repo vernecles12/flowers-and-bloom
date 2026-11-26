@@ -15,6 +15,21 @@
     var scriptBasePath = document.currentScript ? new URL("../../", document.currentScript.src).pathname : "/";
     var apiEndpoint = scriptBasePath === "/" ? "/api/shop.php" : scriptBasePath + "api.php";
 
+    function setTheme(theme) {
+        var dark = theme === "dark";
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+        var toggle = document.getElementById("theme-toggle");
+        toggle.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+        toggle.title = dark ? "Switch to light mode" : "Switch to dark mode";
+        toggle.querySelector(".theme-icon").textContent = dark ? "☀" : "☾";
+        toggle.querySelector(".theme-label").textContent = dark ? "Light" : "Dark";
+        try { localStorage.setItem("flowers-and-bloom-theme", dark ? "dark" : "light"); } catch (error) { /* Storage can be disabled; theme still works for this visit. */ }
+    }
+
+    var initialTheme = "light";
+    try { initialTheme = localStorage.getItem("flowers-and-bloom-theme") || "light"; } catch (error) { /* Keep the light default. */ }
+    setTheme(initialTheme);
+
     function escapeHtml(value) {
         return String(value == null ? "" : value).replace(/[&<>"']/g, function (char) {
             return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char];
@@ -161,7 +176,7 @@
         document.getElementById("cart-view").classList.toggle("hidden", nextPage !== "cart");
         document.getElementById("account-view").classList.toggle("hidden", nextPage !== "account");
         document.querySelectorAll(".nav-link").forEach(function (link) {
-            link.classList.toggle("active", (nextPage === "home" && link.getAttribute("href") === "#home") || (nextPage === "shop" && link.getAttribute("href") === "#shop"));
+            link.classList.toggle("active", (nextPage === "home" && link.getAttribute("href") === "#home") || (nextPage === "shop" && link.getAttribute("href") === "#shop") || (nextPage === "account" && link.getAttribute("href") === "#account-view"));
         });
         if (nextPage === "cart") renderCart();
         if (nextPage === "account") renderAccount();
@@ -210,6 +225,16 @@
         button.disabled = true;
         try {
             var result = await api(action, formData(form));
+            if (action === "register") {
+                var registeredEmail = form.elements.email.value;
+                form.reset();
+                closeModal("auth-modal");
+                switchAuthTab("login");
+                document.querySelector('#login-form [name="email"]').value = registeredEmail;
+                openModal("auth-modal");
+                await floralNotice("Account created", "Your account is ready. Sign in with your email and password to continue.", "Sign in");
+                return;
+            }
             state.user = result.user;
             state.cart = result.cart || { items: [], total: 0, count: 0 };
             state.orders = result.orders || [];
@@ -324,12 +349,21 @@
     });
     document.querySelectorAll(".nav-link").forEach(function (link) {
         link.addEventListener("click", function () {
-            showPage("home");
             var href = link.getAttribute("href");
-            document.querySelectorAll(".nav-link").forEach(function (item) { item.classList.toggle("active", item === link); });
-            if (href === "#home") window.scrollTo({ top: 0, behavior: "smooth" });
+            if (href === "#account-view") {
+                if (state.user) showPage("account");
+                else openAuth("login");
+            } else {
+                showPage("home");
+                if (href === "#home") window.scrollTo({ top: 0, behavior: "smooth" });
+                else if (href === "#shop" || href === "#our-story" || href === "#journal") document.querySelector(href).scrollIntoView({ behavior: "smooth" });
+            }
             document.getElementById("main-nav").classList.remove("open");
         });
+    });
+
+    document.getElementById("theme-toggle").addEventListener("click", function () {
+        setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
     });
 
     document.getElementById("mobile-menu-button").addEventListener("click", function () {

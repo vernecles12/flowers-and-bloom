@@ -401,17 +401,14 @@ if ($action === 'register') {
                 return ['error' => 'An account already exists for this email.'];
             }
         }
-        $user = ['id' => bin2hex(random_bytes(12)), 'name' => $name, 'email' => $email, 'password' => password_hash($password, PASSWORD_DEFAULT), 'hasLoggedIn' => true, 'createdAt' => date(DATE_ATOM), 'reset' => null];
+        $user = ['id' => bin2hex(random_bytes(12)), 'name' => $name, 'email' => $email, 'password' => password_hash($password, PASSWORD_DEFAULT), 'hasLoggedIn' => false, 'createdAt' => date(DATE_ATOM), 'reset' => null];
         $store['users'][] = $user;
         return $user;
     });
     if (isset($created['error'])) {
         fail($created['error'], 409);
     }
-    session_regenerate_id(true);
-    $_SESSION['user_id'] = $created['id'];
-    $store = store_read();
-    respond(['ok' => true, 'user' => public_user($created), 'welcomeType' => 'first', 'message' => 'Your flower-filled account is ready.', 'cart' => cart_summary($store, $created['id']), 'orders' => []]);
+    respond(['ok' => true, 'message' => 'Your account is ready. Please sign in to continue.']);
 }
 
 if ($action === 'login') {

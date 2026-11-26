@@ -19,10 +19,12 @@
         <nav class="main-nav" id="main-nav" aria-label="Main navigation">
             <a href="#home" class="nav-link active">Home</a>
             <a href="#shop" class="nav-link">Shop</a>
+            <a href="#account-view" class="nav-link" id="profile-nav-link">Profile settings</a>
             <a href="#our-story" class="nav-link">The studio</a>
             <a href="#journal" class="nav-link">Flower notes</a>
         </nav>
         <div class="header-actions">
+            <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode"><span class="theme-icon" aria-hidden="true">☾</span><span class="theme-label">Dark</span></button>
             <button class="icon-button account-shortcut" id="account-shortcut" aria-label="Account settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.7-3.2 3.3-5 7-5s6.3 1.8 7 5"/></svg></button>
             <button class="cart-shortcut" id="cart-shortcut"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.1 11.1a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 1.9-1.4L21 9H6"/><circle cx="9.5" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg><span>Add to Cart</span><b id="cart-count">0</b></button>
             <button class="header-login" id="header-login">Sign in</button>
@@ -116,7 +118,7 @@
         </section>
 
         <section class="account-section section-wrap hidden" id="account-view">
-            <div class="section-heading"><div><span class="eyebrow eyebrow-light">Your details and orders</span><h2>Account <em>settings.</em></h2></div><button class="text-button" id="logout-button">Sign out <span>↗</span></button></div>
+            <div class="section-heading"><div><span class="eyebrow eyebrow-light">Your details and orders</span><h2>Profile <em>settings.</em></h2></div><button class="text-button" id="logout-button">Sign out <span>↗</span></button></div>
             <div class="account-layout"><div class="account-intro"><span class="account-avatar" id="account-avatar">✿</span><p class="eyebrow eyebrow-light">Your account</p><h3 id="account-welcome">Hello there</h3><p>Update your name and password here. Your order history is below.</p><div id="account-order-count" class="account-order-count">No orders yet. Orders you place will appear here.</div></div><form class="account-form" id="profile-form"><h3>Your details</h3><label>Your name<input type="text" id="profile-name" name="name" required minlength="2"></label><label>Email address<input type="email" id="profile-email" name="email" readonly></label><div class="form-divider"></div><h3>A new password <small>(optional)</small></h3><p class="form-hint">Only fill these in if you’d like to change it.</p><label>Current password<input type="password" id="current-password" autocomplete="current-password"></label><label>New password<input type="password" id="new-password" autocomplete="new-password" minlength="8"></label><button class="button button-dark" type="submit">Save my details <span>→</span></button></form></div>
             <div class="order-history" id="order-history"></div>
         </section>
