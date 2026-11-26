@@ -4,17 +4,193 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 
+function is_vercel_runtime(): bool
+{
+    return getenv('VERCEL') === '1' || isset($_SERVER['VERCEL']);
+}
+
+function shop_storage_path(): string
+{
+    return __DIR__ . '/storage/shop.json';
+}
+
+function blob_credentials(): array
+{
+    $token = (string)getenv('BLOB_READ_WRITE_TOKEN');
+    $storeId = (string)getenv('BLOB_STORE_ID');
+    if ($token === '' || $storeId === '') {
+        fail('Persistent shop storage is not configured.', 503);
+    }
+    return [$token, $storeId];
+}
+
+function blob_request(string $method, string $url, array $headers = [], ?string $body = null): array
+{
+    if (!function_exists('curl_init')) {
+        fail('Persistent storage transport is unavailable.', 503);
+    }
+    $responseHeaders = [];
+    $handle = curl_init($url);
+    $options = [
+        CURLOPT_CUSTOMREQUEST => $method,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_CONNECTTIMEOUT => 8,
+        CURLOPT_TIMEOUT => 20,
+        CURLOPT_HTTPHEADER => $headers,
+        CURLOPT_HEADERFUNCTION => static function ($curl, string $line) use (&$responseHeaders): int {
+            $length = strlen($line);
+            $parts = explode(':', $line, 2);
+            if (count($parts) === 2) {
+                $responseHeaders[strtolower(trim($parts[0]))] = trim($parts[1]);
+            }
+            return $length;
+        },
+    ];
+    if ($body !== null) {
+        $options[CURLOPT_POSTFIELDS] = $body;
+    }
+    curl_setopt_array($handle, $options);
+    $responseBody = curl_exec($handle);
+    $status = (int)curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
+    $failed = $responseBody === false;
+    curl_close($handle);
+    if ($failed) {
+        fail('Persistent storage could not be reached. Please try again.', 503);
+    }
+    return ['status' => $status, 'headers' => $responseHeaders, 'body' => (string)$responseBody];
+}
+
+function blob_object_path(string $path): string
+{
+    return implode('/', array_map('rawurlencode', explode('/', $path)));
+}
+
+function blob_read_object(string $path): array
+{
+    [$token, $storeId] = blob_credentials();
+    $url = 'https://' . $storeId . '.private.blob.vercel-storage.com/' . blob_object_path($path) . '?cache=0';
+    $result = blob_request('GET', $url, ['Authorization: Bearer ' . $token]);
+    if ($result['status'] === 404) {
+        return ['found' => false, 'body' => '', 'etag' => null];
+    }
+    if ($result['status'] !== 200) {
+        fail('Persistent shop storage could not be read.', 503);
+    }
+    return ['found' => true, 'body' => $result['body'], 'etag' => $result['headers']['etag'] ?? null];
+}
+
+function blob_write_object(string $path, string $body, ?string $etag = null, bool $allowOverwrite = false, int $ttlDays = 0): array
+{
+    [$token, $storeId] = blob_credentials();
+    $query = http_build_query(['pathname' => $path], '', '&', PHP_QUERY_RFC3986);
+    $requestId = $storeId . ':' . (string)round(microtime(true) * 1000) . ':' . bin2hex(random_bytes(6));
+    $headers = [
+        'Authorization: Bearer ' . $token,
+        'x-api-version: 13',
+        'x-api-blob-request-id: ' . $requestId,
+        'x-vercel-blob-store-id: ' . $storeId,
+        'x-api-blob-request-attempt: 0',
+        'x-content-length: ' . strlen($body),
+        'x-content-type: application/json',
+        'Content-Type: application/json',
+        'x-vercel-blob-access: private',
+        'x-allow-overwrite: ' . (($etag !== null || $allowOverwrite) ? '1' : '0'),
+    ];
+    if ($etag !== null) {
+        $headers[] = 'x-if-match: ' . $etag;
+    }
+    if ($ttlDays > 0) {
+        $headers[] = 'x-ttl-days: ' . $ttlDays;
+    }
+    return blob_request('PUT', 'https://blob.vercel-storage.com/?' . $query, $headers, $body);
+}
+
+function empty_shop_store(): array
+{
+    return ['users' => [], 'carts' => [], 'orders' => []];
+}
+
+function vercel_shop_store_snapshot(): array
+{
+    $snapshot = blob_read_object('flowers-and-bloom/shop.json');
+    if (!$snapshot['found']) {
+        return ['store' => empty_shop_store(), 'etag' => null];
+    }
+    $store = json_decode($snapshot['body'], true);
+    if (!is_array($store)) {
+        fail('Persistent shop storage contains invalid data.', 500);
+    }
+    return ['store' => array_merge(empty_shop_store(), $store), 'etag' => $snapshot['etag']];
+}
+
+final class VercelBlobSessionHandler implements SessionHandlerInterface
+{
+    private array $etags = [];
+
+    public function open(string $path, string $name): bool { return true; }
+    public function close(): bool { return true; }
+
+    private function pathFor(string $id): string
+    {
+        return 'flowers-and-bloom/sessions/' . hash('sha256', $id) . '.json';
+    }
+
+    public function read(string $id): string
+    {
+        $snapshot = blob_read_object($this->pathFor($id));
+        if (!$snapshot['found']) {
+            $this->etags[$id] = null;
+            return '';
+        }
+        $this->etags[$id] = $snapshot['etag'];
+        return $snapshot['body'];
+    }
+
+    public function write(string $id, string $data): bool
+    {
+        $etag = $this->etags[$id] ?? null;
+        for ($attempt = 0; $attempt < 3; $attempt++) {
+            $result = blob_write_object($this->pathFor($id), $data, $etag, $etag === null, 14);
+            if ($result['status'] >= 200 && $result['status'] < 300) {
+                $this->etags[$id] = $result['headers']['etag'] ?? null;
+                return true;
+            }
+            if ($result['status'] !== 412) {
+                return false;
+            }
+            $latest = blob_read_object($this->pathFor($id));
+            $etag = $latest['etag'];
+        }
+        return false;
+    }
+
+    public function destroy(string $id): bool
+    {
+        $result = blob_write_object($this->pathFor($id), '', null, true, 1);
+        return $result['status'] >= 200 && $result['status'] < 300;
+    }
+
+    public function gc(int $max_lifetime): int|false { return 0; }
+}
+
+if (is_vercel_runtime()) {
+    session_set_save_handler(new VercelBlobSessionHandler(), true);
+}
 session_set_cookie_params([
     'httponly' => true,
-    'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+    'secure' => is_vercel_runtime() || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
     'samesite' => 'Lax',
 ]);
 session_start();
 
-const SHOP_STORAGE = __DIR__ . '/storage/shop.json';
-
 function respond(array $payload, int $status = 200): never
 {
+    if (session_status() === PHP_SESSION_ACTIVE && !session_write_close()) {
+        http_response_code(503);
+        echo json_encode(['ok' => false, 'message' => 'Your session could not be saved. Please try again.']);
+        exit;
+    }
     http_response_code($status);
     echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     exit;
@@ -50,7 +226,10 @@ function text_length(string $value): int
 
 function store_read(): array
 {
-    $handle = fopen(SHOP_STORAGE, 'c+');
+    if (is_vercel_runtime()) {
+        return vercel_shop_store_snapshot()['store'];
+    }
+    $handle = fopen(shop_storage_path(), 'c+');
     if (!$handle) {
         fail('The shop storage could not be opened.', 500);
     }
@@ -64,7 +243,26 @@ function store_read(): array
 
 function store_update(callable $callback): mixed
 {
-    $handle = fopen(SHOP_STORAGE, 'c+');
+    if (is_vercel_runtime()) {
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $snapshot = vercel_shop_store_snapshot();
+            $store = $snapshot['store'];
+            $result = $callback($store);
+            $json = json_encode($store, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            if ($json === false) {
+                fail('Shop data could not be saved.', 500);
+            }
+            $write = blob_write_object('flowers-and-bloom/shop.json', $json, $snapshot['etag']);
+            if ($write['status'] >= 200 && $write['status'] < 300) {
+                return $result;
+            }
+            if ($write['status'] !== 412) {
+                fail('Shop data could not be saved. Please try again.', 503);
+            }
+        }
+        fail('The shop is busy right now. Please try again.', 503);
+    }
+    $handle = fopen(shop_storage_path(), 'c+');
     if (!$handle) {
         fail('The shop storage could not be opened.', 500);
     }

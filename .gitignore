@@ -1,0 +1,5 @@
+/storage/shop.json
+.env
+.env.*
+!.env.example
+.vercel/
