@@ -47,11 +47,11 @@
         </section>
 
         <section class="promise-strip" aria-label="Our promises">
-            <div><span class="promise-icon">✽</span><p><b>Fresh, always</b><small>Flowers that arrive happy</small></p></div>
+            <div><span class="promise-icon">✽</span><p><b>Seasonal flowers</b><small>Picked fresh each week</small></p></div>
             <i></i>
-            <div><span class="promise-icon">♡</span><p><b>Made by hand</b><small>Thoughtful from the first stem</small></p></div>
+            <div><span class="promise-icon">♡</span><p><b>Arranged by hand</b><small>Made at our Manila studio</small></p></div>
             <i></i>
-            <div><span class="promise-icon">↗</span><p><b>On your doorstep</b><small>Delivering around Metro Manila</small></p></div>
+            <div><span class="promise-icon">↗</span><p><b>City delivery</b><small>Across Metro Manila</small></p></div>
         </section>
 
         <section class="shop-section section-wrap" id="shop">
@@ -95,9 +95,9 @@
             <span class="eyebrow eyebrow-light">A few things we’ve learned along the way</span>
             <h2>Notes from the <em>flower table.</em></h2>
             <div class="journal-grid">
-                <article class="journal-card"><div class="journal-illustration journal-one"><span>✿</span><i>♡</i></div><small>FLOWER CARE · 3 MIN READ</small><h3>Help your flowers last a little longer</h3><p>Fresh water, a clean vase, and a quick trim make a real difference.</p></article>
-                <article class="journal-card"><div class="journal-illustration journal-two"><span>❀</span><i>✳</i></div><small>GIFTING · 2 MIN READ</small><h3>Sending flowers just because</h3><p>You don’t need a special date to let someone know they’re on your mind.</p></article>
-                <article class="journal-card"><div class="journal-illustration journal-three"><span>✼</span><i>♡</i></div><small>FROM THE STUDIO · 4 MIN READ</small><h3>What we’re bringing in this week</h3><p>A peek at the seasonal stems we’ve been taking home ourselves.</p></article>
+                <article class="journal-card"><div class="journal-illustration journal-one"><span>✿</span><i>♡</i></div><small>FLOWER CARE</small><h3>Help your flowers last a little longer</h3><p>Fresh water, a clean vase, and a quick trim make a real difference.</p></article>
+                <article class="journal-card"><div class="journal-illustration journal-two"><span>❀</span><i>✳</i></div><small>GIFTING</small><h3>Sending flowers just because</h3><p>You don’t need a special date to let someone know they’re on your mind.</p></article>
+                <article class="journal-card"><div class="journal-illustration journal-three"><span>✼</span><i>♡</i></div><small>FROM THE STUDIO</small><h3>What we’re bringing in this week</h3><p>A peek at the seasonal stems we’ve been taking home ourselves.</p></article>
             </div>
         </section>
 
@@ -111,37 +111,37 @@
         </section>
 
         <section class="cart-section section-wrap hidden" id="cart-view">
-            <div class="section-heading"><div><span class="eyebrow eyebrow-light">A lovely choice</span><h2>Your flower <em>bag.</em></h2></div><a class="text-link" href="#shop">Keep looking <span>↗</span></a></div>
-            <div class="cart-layout"><div id="cart-items" class="cart-items"></div><aside class="cart-summary"><span class="eyebrow eyebrow-light">A little summary</span><h3>Your total</h3><div class="summary-line"><span>Flowers</span><b id="summary-subtotal">₱0</b></div><div class="summary-line"><span>Delivery</span><span>At checkout</span></div><div class="summary-total"><span>Total</span><b id="summary-total">₱0</b></div><p>We’ll confirm your delivery details on the next step.</p><button class="button button-dark button-full" id="checkout-button">Continue to checkout <span>→</span></button><small>Secure, account-protected checkout</small></aside></div>
+            <div class="section-heading"><div><span class="eyebrow eyebrow-light">Your selections</span><h2>Your <em>cart.</em></h2></div><a class="text-link" href="#shop">Keep browsing <span>↗</span></a></div>
+            <div class="cart-layout"><div id="cart-items" class="cart-items"></div><aside class="cart-summary"><span class="eyebrow eyebrow-light">Order summary</span><h3>Your total</h3><div class="summary-line"><span>Flowers</span><b id="summary-subtotal">₱0</b></div><div class="summary-line"><span>Delivery</span><span>At checkout</span></div><div class="summary-total"><span>Total</span><b id="summary-total">₱0</b></div><p>Add the recipient and address on the next screen.</p><button class="button button-dark button-full" id="checkout-button">Continue to checkout <span>→</span></button><small>Secure, account-protected checkout</small></aside></div>
         </section>
 
         <section class="account-section section-wrap hidden" id="account-view">
-            <div class="section-heading"><div><span class="eyebrow eyebrow-light">Your little corner</span><h2>Account <em>settings.</em></h2></div><button class="text-button" id="logout-button">Sign out <span>↗</span></button></div>
-            <div class="account-layout"><div class="account-intro"><span class="account-avatar" id="account-avatar">✿</span><p class="eyebrow eyebrow-light">A warm welcome</p><h3 id="account-welcome">Hello there</h3><p>Keep your details current and we’ll take care of the flowers.</p><div id="account-order-count" class="account-order-count">No orders just yet. The first one could be a lovely one.</div></div><form class="account-form" id="profile-form"><h3>Your details</h3><label>Your name<input type="text" id="profile-name" name="name" required minlength="2"></label><label>Email address<input type="email" id="profile-email" name="email" readonly></label><div class="form-divider"></div><h3>A new password <small>(optional)</small></h3><p class="form-hint">Only fill these in if you’d like to change it.</p><label>Current password<input type="password" id="current-password" autocomplete="current-password"></label><label>New password<input type="password" id="new-password" autocomplete="new-password" minlength="8"></label><button class="button button-dark" type="submit">Save my details <span>→</span></button></form></div>
+            <div class="section-heading"><div><span class="eyebrow eyebrow-light">Your details and orders</span><h2>Account <em>settings.</em></h2></div><button class="text-button" id="logout-button">Sign out <span>↗</span></button></div>
+            <div class="account-layout"><div class="account-intro"><span class="account-avatar" id="account-avatar">✿</span><p class="eyebrow eyebrow-light">Your account</p><h3 id="account-welcome">Hello there</h3><p>Update your name and password here. Your order history is below.</p><div id="account-order-count" class="account-order-count">No orders yet. Orders you place will appear here.</div></div><form class="account-form" id="profile-form"><h3>Your details</h3><label>Your name<input type="text" id="profile-name" name="name" required minlength="2"></label><label>Email address<input type="email" id="profile-email" name="email" readonly></label><div class="form-divider"></div><h3>A new password <small>(optional)</small></h3><p class="form-hint">Only fill these in if you’d like to change it.</p><label>Current password<input type="password" id="current-password" autocomplete="current-password"></label><label>New password<input type="password" id="new-password" autocomplete="new-password" minlength="8"></label><button class="button button-dark" type="submit">Save my details <span>→</span></button></form></div>
             <div class="order-history" id="order-history"></div>
         </section>
     </main>
 
     <footer class="site-footer">
-        <div class="footer-top"><a class="brand footer-brand" href="#home"><span class="brand-mark">f<span>✿</span></span><span class="brand-name">flowers <em>&</em> bloom<small>FLORAL STUDIO · MANILA</small></span></a><p>Flowers for the little moments<br>that make a life.</p><div class="footer-links"><a href="#shop">Shop flowers</a><a href="#our-story">Our story</a><button id="footer-account">My account</button></div></div>
-        <div class="footer-bottom"><span>© <span id="year"></span> Flowers and Bloom. Made with love, always.</span><span>Metro Manila · Philippines <b>✿</b></span></div>
+        <div class="footer-top"><a class="brand footer-brand" href="#home"><span class="brand-mark">f<span>✿</span></span><span class="brand-name">flowers <em>&</em> bloom<small>FLORAL STUDIO · MANILA</small></span></a><p>Flowers, arranged by hand<br>in Metro Manila.</p><div class="footer-links"><a href="#shop">Shop flowers</a><a href="#our-story">The studio</a><button id="footer-account">My account</button></div></div>
+        <div class="footer-bottom"><span>© <span id="year"></span> Flowers and Bloom. </span><span>Metro Manila · Philippines <b>✿</b></span></div>
     </footer>
 
     <div class="modal-backdrop hidden" id="auth-modal" aria-hidden="true">
         <section class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
             <button class="modal-close" data-close-modal aria-label="Close">×</button>
-            <div class="modal-flower">✿</div><span class="eyebrow eyebrow-light" id="auth-eyebrow">A little welcome</span><h2 id="auth-title">Come on <em>in.</em></h2><p class="auth-subtitle" id="auth-subtitle">Sign in to save your favorites and send something lovely.</p>
+            <div class="modal-flower">✿</div><span class="eyebrow eyebrow-light" id="auth-eyebrow">Your account</span><h2 id="auth-title">Sign in to <em>continue.</em></h2><p class="auth-subtitle" id="auth-subtitle">Sign in to see your orders and manage your details.</p>
             <div class="auth-tabs"><button class="auth-tab active" data-auth-tab="login">Sign in</button><button class="auth-tab" data-auth-tab="register">Create an account</button></div>
             <form id="login-form" class="auth-form"><label>Email address<input type="email" name="email" placeholder="you@example.com" required autocomplete="email"></label><label>Password<input type="password" name="password" placeholder="At least 8 characters" required autocomplete="current-password"></label><button type="button" class="forgot-link" id="forgot-link">Forgot your password?</button><button class="button button-dark button-full" type="submit">Sign in <span>→</span></button></form>
             <form id="register-form" class="auth-form hidden"><label>Your name<input type="text" name="name" placeholder="What should we call you?" required minlength="2" autocomplete="name"></label><label>Email address<input type="email" name="email" placeholder="you@example.com" required autocomplete="email"></label><label>Password<input type="password" name="password" placeholder="At least 8 characters" required minlength="8" autocomplete="new-password"></label><button class="button button-dark button-full" type="submit">Create my account <span>→</span></button></form>
-            <div class="auth-footer">By continuing, you’re agreeing to our little shop’s <a href="#home">terms & privacy</a>.</div>
+            <div class="auth-footer">We only use your details to manage your account and orders.</div>
         </section>
     </div>
 
     <div class="modal-backdrop hidden" id="reset-modal" aria-hidden="true">
         <section class="auth-modal reset-modal" role="dialog" aria-modal="true" aria-labelledby="reset-title">
-            <button class="modal-close" data-close-reset aria-label="Close">×</button><div class="modal-flower">❀</div><span class="eyebrow eyebrow-light">A fresh start</span><h2 id="reset-title">Let’s get you <em>back in.</em></h2>
-            <form id="reset-request-form" class="auth-form"><p class="auth-subtitle">Share your account email and we’ll make a one-time demo code for you.</p><label>Email address<input type="email" name="email" placeholder="you@example.com" required></label><button class="button button-dark button-full" type="submit">Get a reset code <span>→</span></button></form>
+            <button class="modal-close" data-close-reset aria-label="Close">×</button><div class="modal-flower">❀</div><span class="eyebrow eyebrow-light">Password help</span><h2 id="reset-title">Let’s get you <em>back in.</em></h2>
+            <form id="reset-request-form" class="auth-form"><p class="auth-subtitle">Enter the email on your account. We’ll show a one-time demo code here.</p><label>Email address<input type="email" name="email" placeholder="you@example.com" required></label><button class="button button-dark button-full" type="submit">Get a reset code <span>→</span></button></form>
             <div id="reset-code-note" class="reset-code-note hidden" aria-live="polite"></div>
             <form id="reset-complete-form" class="auth-form hidden"><label>Six-digit demo code<input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required></label><label>New password<input type="password" name="password" minlength="8" required autocomplete="new-password"></label><button class="button button-dark button-full" type="submit">Set a new password <span>→</span></button></form>
             <button class="forgot-link reset-back-link" id="reset-back">Back to sign in</button>
@@ -149,7 +149,7 @@
     </div>
 
     <div class="modal-backdrop hidden" id="checkout-modal" aria-hidden="true">
-        <section class="auth-modal checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title"><button class="modal-close" data-close-checkout aria-label="Close">×</button><div class="modal-flower">✽</div><span class="eyebrow eyebrow-light">The lovely last step</span><h2 id="checkout-title">Where shall we <em>send them?</em></h2><p class="auth-subtitle">Your flowers will be tied by hand and delivered with care.</p><form id="checkout-form" class="auth-form"><label>Recipient’s name<input type="text" name="recipient" required minlength="2"></label><label>Delivery address<textarea name="address" rows="3" placeholder="Street, barangay, city" required minlength="8"></textarea></label><label>Contact number<input type="tel" name="phone" required minlength="7" placeholder="+63"></label><button class="button button-dark button-full" type="submit">Place my flower order <span>→</span></button></form><small class="checkout-demo-note">Demo checkout · no payment is collected</small></section>
+        <section class="auth-modal checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title"><button class="modal-close" data-close-checkout aria-label="Close">×</button><div class="modal-flower">✽</div><span class="eyebrow eyebrow-light">Delivery details</span><h2 id="checkout-title">Where shall we <em>send them?</em></h2><p class="auth-subtitle">Add the recipient and delivery address to place your order.</p><form id="checkout-form" class="auth-form"><label>Recipient’s name<input type="text" name="recipient" required minlength="2"></label><label>Delivery address<textarea name="address" rows="3" placeholder="Street, barangay, city" required minlength="8"></textarea></label><label>Contact number<input type="tel" name="phone" required minlength="7" placeholder="+63"></label><button class="button button-dark button-full" type="submit">Place order <span>→</span></button></form><small class="checkout-demo-note">Demo checkout · no payment is collected</small></section>
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>

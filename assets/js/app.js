@@ -31,12 +31,12 @@
         try {
             response = await fetch(apiEndpoint + "?action=" + encodeURIComponent(action), options);
         } catch (error) {
-            throw new Error("We couldn’t reach the flower studio. Please try again.");
+            throw new Error("We couldn’t reach the shop. Check your connection and try again.");
         }
         var result;
-        try { result = await response.json(); } catch (error) { throw new Error("The shop had a little hiccup. Please refresh and try again."); }
+        try { result = await response.json(); } catch (error) { throw new Error("The shop couldn’t load that response. Refresh and try again."); }
         if (!response.ok || result.ok === false) {
-            var requestError = new Error(result.message || "Something didn’t go as planned.");
+            var requestError = new Error(result.message || "That didn’t work. Please try again.");
             requestError.status = response.status;
             throw requestError;
         }
@@ -145,10 +145,10 @@
         document.getElementById("profile-email").value = state.user.email;
         var orders = state.orders || [];
         document.getElementById("account-order-count").textContent = orders.length
-            ? "You’ve sent " + orders.length + (orders.length === 1 ? " lovely order." : " lovely orders.") + " Thank you for sharing the love."
-            : "No orders just yet. The first one could be a lovely one.";
+            ? "You have " + orders.length + (orders.length === 1 ? " order in your history." : " orders in your history.")
+            : "No orders yet. Orders you place will appear here.";
         document.getElementById("order-history").innerHTML = orders.length
-            ? '<h3>A little order history</h3>' + orders.map(function (order) {
+            ? '<h3>Your orders</h3>' + orders.map(function (order) {
                 var date = new Date(order.createdAt);
                 return '<div class="order-row"><div><b>' + escapeHtml(order.id) + '</b><small>' + date.toLocaleDateString() + ' · ' + order.items.length + (order.items.length === 1 ? ' bouquet' : ' bouquets') + '</small></div><div class="order-status">' + escapeHtml(order.status) + ' · ' + money.format(order.total) + '</div></div>';
             }).join("")
@@ -364,7 +364,7 @@
             await api("reset_password", { email: resetEmail, code: data.code, password: data.password });
             closeModal("reset-modal");
             openAuth("login");
-            floralNotice("Password all fresh", "Your new password is ready. Come on in whenever you’re ready.", "Back to sign in");
+            floralNotice("Password updated", "Your new password is ready. Come on in whenever you’re ready.", "Back to sign in");
         } catch (error) { notify(error.message); }
     });
 
@@ -380,7 +380,7 @@
 
     document.getElementById("checkout-button").addEventListener("click", function () {
         if (!state.user) { openAuth("login"); return; }
-        if (!state.cart.count) { notify("Your flower bag is empty for now."); return; }
+        if (!state.cart.count) { notify("Your cart is empty."); return; }
         openModal("checkout-modal");
     });
     document.getElementById("checkout-form").addEventListener("submit", async function (event) {
@@ -395,7 +395,7 @@
             closeModal("checkout-modal");
             renderCart();
             setHeader();
-            await floralNotice("A little joy is on its way", "Order " + escapeHtml(result.order.id) + " is safely with us. Thank you for sharing the love.", "How lovely");
+            await floralNotice("Order received", "We’ve saved order " + escapeHtml(result.order.id) + ". Thanks for shopping with us.", "View account");
             showPage("account");
         } catch (error) {
             notify(error.message);
