@@ -110,24 +110,6 @@
         document.getElementById("cart-count").textContent = state.cart.count || 0;
     }
 
-    function setPaymentOptions(options) {
-        var ready = options && options.gcash === true && options.card === true;
-        [["gcash", "gcash-choice"], ["card", "card-choice"]].forEach(function (entry) {
-            var choice = document.getElementById(entry[1]);
-            var input = choice.querySelector('input[name="paymentMethod"]');
-            var note = choice.querySelector("small");
-            var available = !!(options && options[entry[0]] === true);
-            input.disabled = !available;
-            choice.classList.toggle("is-unavailable", !available);
-            note.textContent = note.dataset[available ? "ready" : "unavailable"];
-        });
-        var setupNote = document.getElementById("payment-setup-note");
-        setupNote.textContent = ready
-            ? "Online checkout is connected in PayMongo test mode. Test transactions do not charge real money."
-            : "Cash on delivery is ready. GCash and debit card will be available after the shop’s PayMongo test and webhook keys are configured.";
-        setupNote.classList.toggle("hidden", ready);
-    }
-
     function renderProducts() {
         var filtered = state.products.filter(function (product) {
             return category === "all" || product.category === category;
@@ -308,22 +290,7 @@
         state.cart = result.cart;
         state.orders = result.orders;
         setHeader();
-        setPaymentOptions(result.paymentOptions || { cod: true, gcash: false, card: false });
         renderProducts();
-    }
-
-    function handlePaymentReturn() {
-        var params = new URLSearchParams(window.location.search);
-        var paymentResult = params.get("payment");
-        if (!paymentResult) return;
-        var orderReference = params.get("reference") || "";
-        window.history.replaceState({}, "", window.location.pathname + window.location.hash);
-        if (paymentResult === "success") {
-            var matchedOrder = (state.orders || []).find(function (order) { return order.id === orderReference; });
-            floralNotice(matchedOrder && matchedOrder.paymentStatus === "Paid" ? "Payment received" : "Payment submitted", matchedOrder && matchedOrder.paymentStatus === "Paid" ? "PayMongo confirmed your payment. Your order is now in the studio queue." : "Thanks for checking out. PayMongo is confirming the payment now; your order will update as soon as it is verified.", "Lovely");
-        } else if (paymentResult === "cancel") {
-            notify("Checkout was cancelled. Your flowers are still in your cart.");
-        }
     }
 
     document.getElementById("year").textContent = new Date().getFullYear();
@@ -462,17 +429,13 @@
         button.disabled = true;
         try {
             var result = await api("checkout", formData(this));
-            if (result.checkoutUrl) {
-                window.location.assign(result.checkoutUrl);
-                return;
-            }
             state.cart = result.cart;
             state.orders.unshift(result.order);
             this.reset();
             closeModal("checkout-modal");
             renderCart();
             setHeader();
-            await floralNotice("Order received", "We’ve saved order " + escapeHtml(result.order.id) + " with " + escapeHtml(result.order.paymentMethod) + ". Thanks for shopping with us.", "View account");
+            await floralNotice("Order saved", "We’ve saved order " + escapeHtml(result.order.id) + " with " + escapeHtml(result.order.paymentMethod) + ". No payment was taken through this demo site.", "View account");
             showPage("account");
         } catch (error) {
             notify(error.message);
@@ -554,7 +517,7 @@
         document.getElementById("newsletter-email").focus();
     });
 
-    refreshState().then(handlePaymentReturn).catch(function (error) {
+    refreshState().catch(function (error) {
         notify(error.message);
         productGrid.innerHTML = '<div class="empty-products">We’re arranging the flower table. Please refresh in a moment.</div>';
     });

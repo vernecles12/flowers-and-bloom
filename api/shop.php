@@ -305,83 +305,6 @@ function public_user(array $user): array
     return ['id' => $user['id'], 'name' => $user['name'], 'email' => $user['email'], 'createdAt' => $user['createdAt'], 'profileImage' => $user['profileImage'] ?? null];
 }
 
-function paymongo_base_url(): string
-{
-    $configured = trim((string)getenv('APP_BASE_URL'));
-    if ($configured !== '') {
-        return rtrim($configured, '/');
-    }
-    $host = (string)($_SERVER['HTTP_HOST'] ?? (getenv('VERCEL_URL') ?: 'localhost'));
-    if (preg_match('/^[a-zA-Z0-9.:-]+$/', $host) !== 1) {
-        fail('The shop URL is not configured for secure checkout.', 503);
-    }
-    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || getenv('VERCEL') === '1';
-    $apiDir = str_replace('\\', '/', dirname((string)($_SERVER['SCRIPT_NAME'] ?? '/api/shop.php')));
-    $basePath = rtrim(dirname($apiDir), '/.');
-    return ($https ? 'https://' : 'http://') . $host . ($basePath ? $basePath : '');
-}
-
-function paymongo_create_checkout(array $summary, string $orderId, string $email, string $name): array
-{
-    $secret = trim((string)getenv('PAYMONGO_SECRET_KEY'));
-    if ($secret === '') {
-        fail('PayMongo is not connected yet. Choose cash on delivery, or ask the shop owner to add a PayMongo test key.', 503);
-    }
-    if (trim((string)getenv('PAYMONGO_WEBHOOK_SECRET')) === '') {
-        fail('PayMongo still needs its signed payment webhook. Cash on delivery is ready in the meantime.', 503);
-    }
-    if (preg_match('/^sk_test_/', $secret) !== 1) {
-        fail('Only a PayMongo test key is accepted here. Live payments are disabled for this demo.', 503);
-    }
-    if (!function_exists('curl_init')) {
-        fail('Online checkout is unavailable on this server. Please choose cash on delivery.', 503);
-    }
-    $lineItems = [];
-    foreach ($summary['items'] as $item) {
-        $lineItems[] = ['name' => $item['name'], 'amount' => (int)$item['price'] * 100, 'currency' => 'PHP', 'quantity' => (int)$item['quantity']];
-    }
-    $baseUrl = paymongo_base_url();
-    if (!str_starts_with($baseUrl, 'https://')) {
-        fail('PayMongo checkout needs a public HTTPS site URL. Use cash on delivery while testing locally.', 503);
-    }
-    $payload = ['data' => ['attributes' => [
-        'line_items' => $lineItems,
-        'payment_method_types' => ['gcash', 'card'],
-        'success_url' => $baseUrl . '/?payment=success&reference=' . rawurlencode($orderId),
-        'cancel_url' => $baseUrl . '/?payment=cancel&reference=' . rawurlencode($orderId),
-        'reference_number' => $orderId,
-        'send_email_receipt' => true,
-        'billing' => ['name' => $name, 'email' => $email],
-        'metadata' => ['order_id' => $orderId],
-    ]]];
-    $handle = curl_init('https://api.paymongo.com/v2/checkout_sessions');
-    curl_setopt_array($handle, [
-        CURLOPT_POST => true,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_CONNECTTIMEOUT => 8,
-        CURLOPT_TIMEOUT => 25,
-        CURLOPT_HTTPHEADER => ['Authorization: Basic ' . base64_encode($secret . ':'), 'Content-Type: application/json'],
-        CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
-    ]);
-    $responseBody = curl_exec($handle);
-    $httpCode = (int)curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
-    curl_close($handle);
-    $response = json_decode(is_string($responseBody) ? $responseBody : '', true);
-    $checkoutUrl = $response['data']['attributes']['checkout_url'] ?? '';
-    $sessionId = $response['data']['id'] ?? '';
-    if ($httpCode < 200 || $httpCode >= 300 || !is_string($checkoutUrl) || !str_starts_with($checkoutUrl, 'https://checkout.paymongo.com/')) {
-        error_log('PayMongo checkout could not be created (HTTP ' . $httpCode . ').');
-        fail('PayMongo could not start checkout. No order was placed; please try again or choose cash on delivery.', 502);
-    }
-    return ['url' => $checkoutUrl, 'sessionId' => (string)$sessionId];
-}
-
-function paymongo_test_checkout_ready(): bool
-{
-    return preg_match('/^sk_test_/', trim((string)getenv('PAYMONGO_SECRET_KEY'))) === 1
-        && trim((string)getenv('PAYMONGO_WEBHOOK_SECRET')) !== '';
-}
-
 function current_user_from_store(array $store): ?array
 {
     $id = $_SESSION['user_id'] ?? null;
@@ -438,59 +361,7 @@ if ($action === 'state' && $method === 'GET') {
     }
     $cart = $user ? cart_summary($store, $user['id']) : ['items' => [], 'total' => 0, 'count' => 0];
     $orders = $user ? array_values(array_filter($store['orders'], fn($order) => $order['userId'] === $user['id'])) : [];
-    $onlinePaymentsReady = paymongo_test_checkout_ready();
-    respond(['ok' => true, 'csrf' => $_SESSION['csrf'], 'user' => $user ? public_user($user) : null, 'products' => products(), 'cart' => $cart, 'orders' => array_reverse($orders), 'paymentOptions' => ['cod' => true, 'gcash' => $onlinePaymentsReady, 'card' => $onlinePaymentsReady]]);
-}
-
-if ($action === 'paymongo_webhook' && $method === 'POST') {
-    $webhookSecret = trim((string)getenv('PAYMONGO_WEBHOOK_SECRET'));
-    $headers = function_exists('getallheaders') ? getallheaders() : [];
-    $signature = (string)($headers['Paymongo-Signature'] ?? $headers['paymongo-signature'] ?? $_SERVER['HTTP_PAYMONGO_SIGNATURE'] ?? '');
-    if ($webhookSecret === '' || $signature === '') {
-        fail('Webhook verification is not configured.', 503);
-    }
-    $parts = [];
-    foreach (explode(',', $signature) as $part) {
-        $pair = explode('=', trim($part), 2);
-        if (count($pair) === 2) $parts[$pair[0]] = $pair[1];
-    }
-    $timestamp = $parts['t'] ?? '';
-    $eventData = $input['data'] ?? [];
-    $eventType = $eventData['attributes']['type'] ?? $eventData['type'] ?? '';
-    $liveMode = !empty($eventData['attributes']['livemode'] ?? $eventData['livemode'] ?? false);
-    $providedSignature = $liveMode ? ($parts['li'] ?? '') : ($parts['te'] ?? '');
-    $expectedSignature = hash_hmac('sha256', $timestamp . '.' . $rawBody, $webhookSecret);
-    if (!ctype_digit((string)$timestamp) || abs(time() - (int)$timestamp) > 600 || $providedSignature === '' || !hash_equals($expectedSignature, $providedSignature)) {
-        fail('Webhook signature is invalid.', 401);
-    }
-    if ($eventType === 'checkout_session.payment.paid') {
-        $session = $eventData['attributes']['data'] ?? $eventData['data'] ?? [];
-        $attributes = $session['attributes'] ?? [];
-        $payments = $attributes['payments'] ?? [];
-        $paid = false;
-        foreach ($payments as $payment) {
-            $paymentAttributes = $payment['attributes'] ?? [];
-            if (($paymentAttributes['status'] ?? '') === 'paid' && strtoupper((string)($paymentAttributes['currency'] ?? 'PHP')) === 'PHP') { $paid = true; break; }
-        }
-        $reference = (string)($attributes['reference_number'] ?? '');
-        if ($paid && $reference !== '') {
-            store_update(function (&$store) use ($reference, $session) {
-                foreach ($store['orders'] as &$order) {
-                    $intentAmount = (int)($session['attributes']['payment_intent']['attributes']['amount'] ?? 0);
-                    if (($order['id'] ?? '') === $reference && ($order['paymentMethod'] ?? '') !== 'Cash on delivery' && ($order['paymongoSessionId'] ?? '') === ($session['id'] ?? null) && $intentAmount === (int)$order['total'] * 100) {
-                        $order['paymentStatus'] = 'Paid';
-                        $order['status'] = 'Received';
-                        $order['paymongoSessionId'] = (string)($session['id'] ?? $order['paymongoSessionId'] ?? '');
-                        $order['paidAt'] = date(DATE_ATOM);
-                        $store['carts'][$order['userId']] = [];
-                        break;
-                    }
-                }
-                return true;
-            });
-        }
-    }
-    respond(['ok' => true]);
+    respond(['ok' => true, 'csrf' => $_SESSION['csrf'], 'user' => $user ? public_user($user) : null, 'products' => products(), 'cart' => $cart, 'orders' => array_reverse($orders)]);
 }
 
 if ($method !== 'POST') {
@@ -722,24 +593,22 @@ if ($action === 'checkout') {
         fail('Your cart is empty. Add a bouquet before checking out.');
     }
     $orderId = 'FB-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
-    $payment = $paymentMethod === 'cod' ? null : paymongo_create_checkout($snapshotSummary, $orderId, $user['email'], $user['name']);
-    $paymentName = ['cod' => 'Cash on delivery', 'gcash' => 'GCash via PayMongo', 'card' => 'Debit card via PayMongo'][$paymentMethod];
-    $result = store_update(function (&$store) use ($userId, $recipient, $address, $phone, $paymentMethod, $paymentName, $orderId, $payment, $snapshotSummary) {
+    $paymentName = ['cod' => 'Cash on delivery', 'gcash' => 'GCash transfer (manual)', 'card' => 'Debit card at delivery'][$paymentMethod];
+    $paymentStatus = ['cod' => 'Pay on delivery', 'gcash' => 'Payment not made', 'card' => 'Due at delivery'][$paymentMethod];
+    $result = store_update(function (&$store) use ($userId, $recipient, $address, $phone, $paymentMethod, $paymentName, $paymentStatus, $orderId, $snapshotSummary) {
         $summary = cart_summary($store, $userId);
         if (!$summary['items'] || $summary['total'] !== $snapshotSummary['total'] || $summary['count'] !== $snapshotSummary['count']) {
-            return ['error' => 'Your cart changed while checkout was starting. Please review it and try again.'];
+            return ['error' => 'Your cart changed while placing the order. Please review it and try again.'];
         }
-        $online = $paymentMethod !== 'cod';
-        $order = ['id' => $orderId, 'userId' => $userId, 'items' => $summary['items'], 'total' => $summary['total'], 'recipient' => $recipient, 'address' => $address, 'phone' => $phone, 'paymentMethod' => $paymentName, 'paymentStatus' => $online ? 'Awaiting payment' : 'Pay on delivery', 'paymongoSessionId' => $payment['sessionId'] ?? null, 'status' => $online ? 'Pending payment' : 'Received', 'createdAt' => date(DATE_ATOM)];
+        $order = ['id' => $orderId, 'userId' => $userId, 'items' => $summary['items'], 'total' => $summary['total'], 'recipient' => $recipient, 'address' => $address, 'phone' => $phone, 'paymentMethod' => $paymentName, 'paymentStatus' => $paymentStatus, 'status' => $paymentMethod === 'gcash' ? 'Awaiting manual payment' : 'Received', 'createdAt' => date(DATE_ATOM)];
         $store['orders'][] = $order;
-        if (!$online) $store['carts'][$userId] = [];
+        $store['carts'][$userId] = [];
         return ['order' => $order];
     });
     if (isset($result['error'])) {
         fail($result['error']);
     }
-    if ($payment) respond(['ok' => true, 'order' => $result['order'], 'checkoutUrl' => $payment['url'], 'cart' => $store['carts'][$userId] ?? []]);
-    respond(['ok' => true, 'order' => $result['order'], 'cart' => ['items' => [], 'total' => 0, 'count' => 0], 'message' => 'Your bouquet order has been placed.']);
+    respond(['ok' => true, 'order' => $result['order'], 'cart' => ['items' => [], 'total' => 0, 'count' => 0], 'message' => 'Your order and payment preference have been saved. No payment was taken.']);
 }
 
 fail('That shop action was not found.', 404);
