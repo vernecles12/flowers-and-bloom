@@ -269,6 +269,9 @@ h1, h2, h3, p { margin-top: 0; }
 .payment-logo { display: block; width: 52px; height: 36px; object-fit: contain; }
 .payment-choice b, .payment-choice small { display: block; color: var(--ink); font-size: 11px; letter-spacing: 0; }
 .payment-choice small { color: #73786d; font-size: 9px; margin-top: 2px; }
+.payment-choice.is-unavailable { opacity: .58; cursor: not-allowed; background: rgba(120,120,110,.04); }
+.payment-choice input:disabled { cursor: not-allowed; }
+.payment-setup-note { margin: 10px 1px 0; padding: 10px 12px; border-left: 2px solid #a96d65; background: #f3eee5; color: #545c51; font-size: 10px; line-height: 1.55; }
 
 .toast { position: fixed; z-index: 80; bottom: 25px; left: 50%; transform: translate(-50%,20px); padding: 13px 19px; max-width: calc(100vw - 35px); background: #344d3e; color: #fff9ed; box-shadow: var(--shadow); opacity: 0; pointer-events: none; font-size: 10px; letter-spacing: .025em; transition: opacity .2s,transform .2s; }
 .toast.visible { opacity: 1; transform: translate(-50%,0); }
@@ -416,6 +419,8 @@ html[data-theme="dark"] .payment-choice { border-color:#526154; }
 html[data-theme="dark"] .payment-choice:has(input:checked) { background:#344539; border-color:#94a38f; }
 html[data-theme="dark"] .payment-choice b { color:#f1eee4; }
 html[data-theme="dark"] .payment-choice small { color:#d0d2c7; }
+html[data-theme="dark"] .payment-choice.is-unavailable { background:rgba(10,15,11,.25); }
+html[data-theme="dark"] .payment-setup-note { background:#303d33; border-color:#d09990; color:#e4e5dc; }
 html[data-theme="dark"] .newsletter-result { background:#26352c; color:#eef0e5; border-color:#687c69; }
 html[data-theme="dark"] .newsletter-change { color:#efb9af; }
 html[data-theme="dark"] .summary-line, html[data-theme="dark"] .account-order-count { border-color:#4b5a4e; }

@@ -110,6 +110,24 @@
         document.getElementById("cart-count").textContent = state.cart.count || 0;
     }
 
+    function setPaymentOptions(options) {
+        var ready = options && options.gcash === true && options.card === true;
+        [["gcash", "gcash-choice"], ["card", "card-choice"]].forEach(function (entry) {
+            var choice = document.getElementById(entry[1]);
+            var input = choice.querySelector('input[name="paymentMethod"]');
+            var note = choice.querySelector("small");
+            var available = !!(options && options[entry[0]] === true);
+            input.disabled = !available;
+            choice.classList.toggle("is-unavailable", !available);
+            note.textContent = note.dataset[available ? "ready" : "unavailable"];
+        });
+        var setupNote = document.getElementById("payment-setup-note");
+        setupNote.textContent = ready
+            ? "Online checkout is connected in PayMongo test mode. Test transactions do not charge real money."
+            : "Cash on delivery is ready. GCash and debit card will be available after the shop’s PayMongo test and webhook keys are configured.";
+        setupNote.classList.toggle("hidden", ready);
+    }
+
     function renderProducts() {
         var filtered = state.products.filter(function (product) {
             return category === "all" || product.category === category;
@@ -290,6 +308,7 @@
         state.cart = result.cart;
         state.orders = result.orders;
         setHeader();
+        setPaymentOptions(result.paymentOptions || { cod: true, gcash: false, card: false });
         renderProducts();
     }
 

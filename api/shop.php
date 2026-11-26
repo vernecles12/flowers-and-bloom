@@ -376,6 +376,12 @@ function paymongo_create_checkout(array $summary, string $orderId, string $email
     return ['url' => $checkoutUrl, 'sessionId' => (string)$sessionId];
 }
 
+function paymongo_test_checkout_ready(): bool
+{
+    return preg_match('/^sk_test_/', trim((string)getenv('PAYMONGO_SECRET_KEY'))) === 1
+        && trim((string)getenv('PAYMONGO_WEBHOOK_SECRET')) !== '';
+}
+
 function current_user_from_store(array $store): ?array
 {
     $id = $_SESSION['user_id'] ?? null;
@@ -432,7 +438,8 @@ if ($action === 'state' && $method === 'GET') {
     }
     $cart = $user ? cart_summary($store, $user['id']) : ['items' => [], 'total' => 0, 'count' => 0];
     $orders = $user ? array_values(array_filter($store['orders'], fn($order) => $order['userId'] === $user['id'])) : [];
-    respond(['ok' => true, 'csrf' => $_SESSION['csrf'], 'user' => $user ? public_user($user) : null, 'products' => products(), 'cart' => $cart, 'orders' => array_reverse($orders)]);
+    $onlinePaymentsReady = paymongo_test_checkout_ready();
+    respond(['ok' => true, 'csrf' => $_SESSION['csrf'], 'user' => $user ? public_user($user) : null, 'products' => products(), 'cart' => $cart, 'orders' => array_reverse($orders), 'paymentOptions' => ['cod' => true, 'gcash' => $onlinePaymentsReady, 'card' => $onlinePaymentsReady]]);
 }
 
 if ($action === 'paymongo_webhook' && $method === 'POST') {
