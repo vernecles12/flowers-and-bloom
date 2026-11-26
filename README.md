@@ -14,7 +14,7 @@ The `storage` directory must be writable by Apache. Its `.htaccess` blocks direc
 
 The Vercel entry points are `api/index.php` and `api/shop.php`. `vercel.json` routes the homepage and JSON API through the community PHP runtime, while images and stylesheets stay static assets.
 
-The Vercel project uses a private Blob store for accounts, carts, orders, and PHP sessions. Vercel supplies `BLOB_READ_WRITE_TOKEN` when the store is connected to the project; `BLOB_STORE_ID` identifies that store. Local XAMPP continues to use `storage/shop.json`. That file is excluded from deployment and version control so local account data is not published.
+The Vercel project uses a private Blob store for accounts, carts, orders, newsletter sign-ups, and PHP sessions. Vercel supplies `BLOB_READ_WRITE_TOKEN` when the store is connected to the project; `BLOB_STORE_ID` identifies that store. Local XAMPP continues to use `storage/shop.json`. That file is excluded from deployment and version control so local account data is not published.
 
 ## Shop features
 
@@ -24,6 +24,7 @@ The Vercel project uses a private Blob store for accounts, carts, orders, and PH
 - Request a password reset, receive a one-time code that expires after 10 minutes, and set a new password.
 - Add products, change quantities, and place a demo order after signing in.
 - Edit profile details and review saved orders.
+- Join the flower notes list; email addresses are validated, stored privately, and de-duplicated.
 
 Password reset codes are displayed on screen for this demo. The app also attempts to email the code through PHP `mail()` when mail is configured. Checkout records the order but does not collect payment.
 
@@ -31,9 +32,12 @@ Password reset codes are displayed on screen for this demo. The app also attempt
 
 - `index.php` - storefront and dialogs
 - `api.php` - account, reset-code, cart, profile, and order endpoints
-- `api/` - Vercel PHP entry points
+- `api/shop.php` - JSON API for sessions, accounts, password resets, carts, orders, and newsletter subscriptions
+- `api/lib/catalog.php` - product catalogue and customer-friendly descriptions
+- `api/lib/newsletter.php` - private newsletter subscription storage
+- `api/index.php` - Vercel storefront entry point
 - `assets/css/styles.css` and `assets/js/app.js` - responsive UI and interactions
 - `assets/images/` - local JPG backgrounds and flower photography
 - `storage/shop.json` - local users, carts, and orders (ignored by Git)
 
-Product names, descriptions, and prices are defined in `api.php`.
+Product names, descriptions, and prices live in `api/lib/catalog.php`. The site uses system font stacks and does not download fonts from Google.

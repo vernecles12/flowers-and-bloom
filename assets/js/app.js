@@ -12,6 +12,8 @@
     var homeSections = ["home", "shop", "our-story", "journal"];
     var productGrid = document.getElementById("product-grid");
     var money = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 });
+    var scriptBasePath = document.currentScript ? new URL("../../", document.currentScript.src).pathname : "/";
+    var apiEndpoint = scriptBasePath === "/" ? "/api/shop.php" : scriptBasePath + "api.php";
 
     function escapeHtml(value) {
         return String(value == null ? "" : value).replace(/[&<>"']/g, function (char) {
@@ -27,7 +29,7 @@
         }
         var response;
         try {
-            response = await fetch("/api/shop.php?action=" + encodeURIComponent(action), options);
+            response = await fetch(apiEndpoint + "?action=" + encodeURIComponent(action), options);
         } catch (error) {
             throw new Error("We couldn’t reach the flower studio. Please try again.");
         }
@@ -80,9 +82,9 @@
         var title = first ? "Welcome" : "Welcome back";
         var name = user && user.name ? user.name.split(/\s+/)[0] : "flower friend";
         var message = first
-            ? "We’re so happy you’re here, " + escapeHtml(name) + ". There’s a little something lovely waiting for you."
-            : "It’s lovely to see you again, " + escapeHtml(name) + ". Shall we find something beautiful?";
-        floralNotice(title, message, "Let’s bloom");
+            ? "Glad you found us, " + escapeHtml(name) + ". Have a look around."
+            : "Good to see you again, " + escapeHtml(name) + ". What can we help you find today?";
+        floralNotice(title, message, "Have a look");
     }
 
     function setHeader() {
@@ -99,7 +101,7 @@
         currentPage = Math.min(currentPage, pages);
         var start = (currentPage - 1) * pageSize;
         var items = filtered.slice(start, start + pageSize);
-        document.getElementById("shop-count").textContent = filtered.length + (filtered.length === 1 ? " little favorite" : " little favorites");
+        document.getElementById("shop-count").textContent = filtered.length + (filtered.length === 1 ? " bouquet" : " bouquets");
         document.getElementById("page-label").textContent = (filtered.length ? String(start + 1).padStart(2, "0") : "00") + " — " + String(Math.min(start + pageSize, filtered.length)).padStart(2, "0");
         document.getElementById("page-number").textContent = String(currentPage).padStart(2, "0") + " / " + String(pages).padStart(2, "0");
         document.getElementById("page-prev").disabled = currentPage <= 1;
@@ -124,7 +126,7 @@
         document.getElementById("summary-total").textContent = money.format(state.cart.total || 0);
         var root = document.getElementById("cart-items");
         if (!state.cart.items || state.cart.items.length === 0) {
-            root.innerHTML = '<div class="cart-empty"><span>✿</span><h3>Your bag is taking a little nap.</h3><p>Let’s find a bouquet to brighten someone’s day.</p><button class="button button-dark" data-go-shop>Visit the flower shop <span>→</span></button></div>';
+            root.innerHTML = '<div class="cart-empty"><span>✿</span><h3>Your cart is empty.</h3><p>Browse the shop to find a bunch you like.</p><button class="button button-dark" data-go-shop>Browse flowers <span>→</span></button></div>';
             return;
         }
         root.innerHTML = state.cart.items.map(function (item) {
@@ -194,9 +196,9 @@
         document.getElementById("login-form").classList.toggle("hidden", tab !== "login");
         document.getElementById("register-form").classList.toggle("hidden", tab !== "register");
         var isRegister = tab === "register";
-        document.getElementById("auth-title").innerHTML = isRegister ? "Let’s make it <em>official.</em>" : "Come on <em>in.</em>";
-        document.getElementById("auth-eyebrow").textContent = isRegister ? "A new little beginning" : "A little welcome";
-        document.getElementById("auth-subtitle").textContent = isRegister ? "Create an account to send, save and share your favorite flowers." : "Sign in to save your favorites and send something lovely.";
+        document.getElementById("auth-title").innerHTML = isRegister ? "Create your <em>account.</em>" : "Sign in to <em>continue.</em>";
+        document.getElementById("auth-eyebrow").textContent = isRegister ? "A few details to get started" : "Your account";
+        document.getElementById("auth-subtitle").textContent = isRegister ? "Create an account to check out and keep track of your orders." : "Sign in to see your orders and manage your details.";
     }
 
     function formData(form) {
@@ -239,7 +241,7 @@
             var result = await api("add_to_cart", { productId: productId });
             state.cart = result.cart;
             setHeader();
-            notify("A lovely choice. It’s in your flower bag.");
+            notify("Added to your cart.");
         } catch (error) {
             if (error.status === 401) {
                 state.user = null;
@@ -293,7 +295,7 @@
     });
 
     document.getElementById("cart-shortcut").addEventListener("click", function () {
-        if (!state.user) { openAuth("login"); notify("Sign in first and we’ll keep your flowers safe."); return; }
+        if (!state.user) { openAuth("login"); notify("Sign in or create an account to add flowers to your cart."); return; }
         showPage("cart");
     });
     document.getElementById("account-shortcut").addEventListener("click", function () {
@@ -410,10 +412,20 @@
             notify(result.message);
         } catch (error) { notify(error.message); }
     });
-    document.getElementById("newsletter-form").addEventListener("submit", function (event) {
+    document.getElementById("newsletter-form").addEventListener("submit", async function (event) {
         event.preventDefault();
-        this.reset();
-        floralNotice("You’re on the list", "Thank you. We’ll save a little flower news for your inbox.", "Can’t wait");
+        var form = this;
+        var button = form.querySelector("button[type=submit]");
+        button.disabled = true;
+        try {
+            var result = await api("newsletter_subscribe", { email: form.elements.email.value });
+            form.reset();
+            await floralNotice("Thanks for stopping by", escapeHtml(result.message), "Sounds good");
+        } catch (error) {
+            notify(error.message);
+        } finally {
+            button.disabled = false;
+        }
     });
 
     refreshState().catch(function (error) {

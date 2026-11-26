@@ -4,15 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f9f6ee">
-    <meta name="description" content="Thoughtful flowers, gathered with care. Find your next bouquet at Flowers and Bloom.">
-    <title>Flowers and Bloom — A little joy, delivered</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
+    <meta name="description" content="Hand-tied flowers for birthdays, ordinary Tuesdays, and all the days in between. Made with care in Metro Manila.">
+    <title>Flowers and Bloom | A little joy, sent your way</title>
     <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body>
-    <div class="announcement">A little note: delivering lovely bouquets around Metro Manila <span>✿</span></div>
+    <div class="announcement">Fresh bunches, delivered around Metro Manila <span>✿</span></div>
     <header class="site-header">
         <a class="brand" href="#home" aria-label="Flowers and Bloom home">
             <span class="brand-mark">f<span>✿</span></span>
@@ -22,8 +19,8 @@
         <nav class="main-nav" id="main-nav" aria-label="Main navigation">
             <a href="#home" class="nav-link active">Home</a>
             <a href="#shop" class="nav-link">Shop</a>
-            <a href="#our-story" class="nav-link">Our story</a>
-            <a href="#journal" class="nav-link">The little things</a>
+            <a href="#our-story" class="nav-link">The studio</a>
+            <a href="#journal" class="nav-link">Flower notes</a>
         </nav>
         <div class="header-actions">
             <button class="icon-button account-shortcut" id="account-shortcut" aria-label="Account settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.7-3.2 3.3-5 7-5s6.3 1.8 7 5"/></svg></button>
@@ -36,14 +33,14 @@
         <section class="hero" id="home">
             <div class="hero-backdrop"></div>
             <div class="hero-content">
-                <div class="eyebrow"><span></span> Flowers for the in-between moments <span></span></div>
-                <h1>A little joy,<br>in full <em>bloom.</em></h1>
-                <p>Hand-tied with heart. Delivered with care. Find something lovely for someone you love — even if that someone is you.</p>
+                <div class="eyebrow"><span></span> For the days worth celebrating, and the ones that aren't <span></span></div>
+                <h1>A little joy,<br>sent <em>your way.</em></h1>
+                <p>Birthday flowers, a thank-you, or just because. Tell us who they’re for and we’ll put together a bunch worth opening the door for.</p>
                 <div class="hero-actions">
-                    <a href="#shop" class="button button-dark">Find your flowers <span>↗</span></a>
-                    <a href="#our-story" class="text-link">Get to know us <span>↓</span></a>
+                    <a href="#shop" class="button button-dark">Browse the flowers <span>↗</span></a>
+                    <a href="#our-story" class="text-link">Meet the studio <span>↓</span></a>
                 </div>
-                <div class="hero-caption"><span class="caption-flower">✿</span><span>Always seasonal.<br>Always from the heart.</span></div>
+                <div class="hero-caption"><span class="caption-flower">✿</span><span>Picked with care.<br>Tied by hand.</span></div>
             </div>
             <div class="hero-side-note">GROWN WITH CARE<br><span>✳</span><br>GIVEN WITH LOVE</div>
             <a class="scroll-cue" href="#shop"><span></span> A little further</a>
@@ -59,8 +56,8 @@
 
         <section class="shop-section section-wrap" id="shop">
             <div class="section-heading">
-                <div><span class="eyebrow eyebrow-light">A few of our favorites</span><h2>Find your <em>flowers.</em></h2></div>
-                <p>For big days, ordinary Tuesdays<br>and everything in between.</p>
+                <div><span class="eyebrow eyebrow-light">Made fresh at the studio</span><h2>Find your <em>flowers.</em></h2></div>
+                <p>Have a look around. The right bunch<br>usually has a way of finding you.</p>
             </div>
             <div class="shop-toolbar">
                 <div class="filter-list" role="group" aria-label="Filter flowers">
@@ -87,30 +84,30 @@
             <div class="story-copy">
                 <span class="eyebrow eyebrow-light">A small studio with a big heart</span>
                 <h2>We believe in<br>the <em>little things.</em></h2>
-                <p>A fresh bunch on the kitchen table. A tiny note tucked under the ribbon. The moment someone opens the door and knows you were thinking of them.</p>
-                <p>That’s why we make every bouquet by hand, with flowers picked for their season and the feeling you want to share.</p>
-                <a href="#journal" class="text-link">A little more about us <span>↗</span></a>
-                <div class="signature">With love, <em>the Flowers & Bloom girls</em><span>✿</span></div>
+                <p>We started Flowers and Bloom because a bunch of flowers can say the thing you meant to say all along. It can make a kitchen feel like home, or let a friend know you haven’t forgotten about them.</p>
+                <p>We buy what looks good that week, then make each order by hand here in Manila. No two bunches are exactly alike, and that’s part of the fun.</p>
+                <a href="#journal" class="text-link">A few notes from us <span>↗</span></a>
+                <div class="signature">See you at the flower table, <em>the Flowers and Bloom team</em><span>✿</span></div>
             </div>
         </section>
 
         <section class="little-things-section" id="journal">
-            <span class="eyebrow eyebrow-light">Thoughts from the flower table</span>
-            <h2>The little things <em>matter.</em></h2>
+            <span class="eyebrow eyebrow-light">A few things we’ve learned along the way</span>
+            <h2>Notes from the <em>flower table.</em></h2>
             <div class="journal-grid">
-                <article class="journal-card"><div class="journal-illustration journal-one"><span>✿</span><i>♡</i></div><small>FLOWER NOTES · 3 MIN READ</small><h3>How to keep your flowers happy for longer</h3><p>A few easy things to do when your blooms get home.</p></article>
-                <article class="journal-card"><div class="journal-illustration journal-two"><span>❀</span><i>✳</i></div><small>GIFTING GUIDE · 2 MIN READ</small><h3>A little something for no reason at all</h3><p>Because the nicest surprises don’t need a date.</p></article>
-                <article class="journal-card"><div class="journal-illustration journal-three"><span>✼</span><i>♡</i></div><small>FROM THE STUDIO · 4 MIN READ</small><h3>What’s blooming this month</h3><p>A note on the seasonal stems we can’t stop loving.</p></article>
+                <article class="journal-card"><div class="journal-illustration journal-one"><span>✿</span><i>♡</i></div><small>FLOWER CARE · 3 MIN READ</small><h3>Help your flowers last a little longer</h3><p>Fresh water, a clean vase, and a quick trim make a real difference.</p></article>
+                <article class="journal-card"><div class="journal-illustration journal-two"><span>❀</span><i>✳</i></div><small>GIFTING · 2 MIN READ</small><h3>Sending flowers just because</h3><p>You don’t need a special date to let someone know they’re on your mind.</p></article>
+                <article class="journal-card"><div class="journal-illustration journal-three"><span>✼</span><i>♡</i></div><small>FROM THE STUDIO · 4 MIN READ</small><h3>What we’re bringing in this week</h3><p>A peek at the seasonal stems we’ve been taking home ourselves.</p></article>
             </div>
         </section>
 
         <section class="newsletter-section">
             <div class="newsletter-flower">✿</div>
-            <span class="eyebrow">A little love in your inbox</span>
-            <h2>Good things <em>grow here.</em></h2>
-            <p>Seasonal stems, gifting ideas and the occasional love note. Never too much, always lovely.</p>
-            <form id="newsletter-form" class="newsletter-form"><label class="visually-hidden" for="newsletter-email">Your email address</label><input id="newsletter-email" type="email" placeholder="Your email address" required><button type="submit" aria-label="Subscribe">Count me in <span>→</span></button></form>
-            <small class="newsletter-note">A small inbox treat, whenever we have something to say.</small>
+            <span class="eyebrow">An occasional note from the studio</span>
+            <h2>Flowers, and a little <em>good news.</em></h2>
+            <p>Seasonal bunches, simple flower-care tips, and the odd note from us. We keep it occasional.</p>
+            <form id="newsletter-form" class="newsletter-form"><label class="visually-hidden" for="newsletter-email">Your email address</label><input id="newsletter-email" name="email" type="email" maxlength="254" autocomplete="email" placeholder="Your email address" required><button type="submit" aria-label="Join the flower notes list">Join the list <span>→</span></button></form>
+            <small class="newsletter-note">We’ll only use your address for occasional notes from the studio.</small>
         </section>
 
         <section class="cart-section section-wrap hidden" id="cart-view">

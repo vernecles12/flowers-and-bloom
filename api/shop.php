@@ -4,6 +4,9 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 
+require_once __DIR__ . '/lib/catalog.php';
+require_once __DIR__ . '/lib/newsletter.php';
+
 function is_vercel_runtime(): bool
 {
     return getenv('VERCEL') === '1' || isset($_SERVER['VERCEL']);
@@ -20,6 +23,9 @@ function blob_credentials(): array
     $storeId = (string)getenv('BLOB_STORE_ID');
     if ($token === '' || $storeId === '') {
         throw new RuntimeException('Blob credentials are missing.');
+    }
+    if (str_starts_with($storeId, 'store_')) {
+        $storeId = substr($storeId, 6);
     }
     return [$token, $storeId];
 }
@@ -112,7 +118,7 @@ function blob_write_object(string $path, string $body, ?string $etag = null, boo
 
 function empty_shop_store(): array
 {
-    return ['users' => [], 'carts' => [], 'orders' => []];
+    return ['users' => [], 'carts' => [], 'orders' => [], 'newsletter' => []];
 }
 
 function vercel_shop_store_snapshot(): array
@@ -226,24 +232,6 @@ function fail(string $message, int $status = 400): never
     respond(['ok' => false, 'message' => $message], $status);
 }
 
-function products(): array
-{
-    return [
-        ['id' => 'rose-garden', 'name' => 'Rose Garden', 'category' => 'romance', 'price' => 1680, 'image' => 'rose-garden.jpg', 'tag' => 'Bestseller', 'description' => 'Garden roses in the softest blush, gathered with airy seasonal greens.'],
-        ['id' => 'peony-cloud', 'name' => 'Peony Cloud', 'category' => 'signature', 'price' => 2450, 'image' => 'peony.jpg', 'tag' => 'Seasonal', 'description' => 'Fluffy pink peonies and delicate filler flowers, made for a little magic.'],
-        ['id' => 'tulip-morning', 'name' => 'Tulip Morning', 'category' => 'bright', 'price' => 1380, 'image' => 'tulip.jpg', 'tag' => 'Just in', 'description' => 'Fresh pastel tulips with graceful stems and a clean, modern silhouette.'],
-        ['id' => 'wildflower-daydream', 'name' => 'Wildflower Daydream', 'category' => 'bright', 'price' => 1520, 'image' => 'wildflower.jpg', 'tag' => 'Florist’s pick', 'description' => 'A joyful mix of daisy, cosmos and little seasonal blooms.'],
-        ['id' => 'sunlit-sunflowers', 'name' => 'Sunlit Sunflowers', 'category' => 'bright', 'price' => 1280, 'image' => 'sunflower.jpg', 'tag' => 'Brighten their day', 'description' => 'Golden sunflowers paired with chamomile and a touch of wild greenery.'],
-        ['id' => 'blush-and-bloom', 'name' => 'Blush & Bloom', 'category' => 'romance', 'price' => 1980, 'image' => 'blush.jpg', 'tag' => 'Customer love', 'description' => 'A romantic blend of pink roses, lisianthus and soft little accents.'],
-        ['id' => 'white-garden', 'name' => 'White Garden', 'category' => 'signature', 'price' => 1850, 'image' => 'white-garden.jpg', 'tag' => 'Quiet elegance', 'description' => 'Creamy whites and garden greens, arranged with an effortless feel.'],
-        ['id' => 'rosy-posy', 'name' => 'Rosy Posy', 'category' => 'romance', 'price' => 1450, 'image' => 'rosy-posy.jpg', 'tag' => 'A sweet gesture', 'description' => 'A petite bunch of rosy blooms wrapped by hand in soft paper.'],
-        ['id' => 'petal-party', 'name' => 'Petal Party', 'category' => 'bright', 'price' => 1720, 'image' => 'petal-party.jpg', 'tag' => 'Made to smile', 'description' => 'A playful seasonal mix in warm apricot, butter yellow and pink.'],
-        ['id' => 'ever-after', 'name' => 'Ever After', 'category' => 'signature', 'price' => 2650, 'image' => 'ever-after.jpg', 'tag' => 'The grand gesture', 'description' => 'A full, romantic arrangement of premium roses and graceful foliage.'],
-        ['id' => 'daisy-days', 'name' => 'Daisy Days', 'category' => 'bright', 'price' => 1180, 'image' => 'daisy.jpg', 'tag' => 'Little sunshine', 'description' => 'Happy white daisies with yellow centers and fresh, leafy stems.'],
-        ['id' => 'lavender-haze', 'name' => 'Lavender Haze', 'category' => 'signature', 'price' => 1780, 'image' => 'lavender.jpg', 'tag' => 'Soft & dreamy', 'description' => 'Lilac-toned blooms and fragrant lavender sprigs in a gentle palette.'],
-    ];
-}
-
 function text_length(string $value): int
 {
     return function_exists('mb_strlen') ? mb_strlen($value, 'UTF-8') : strlen($value);
@@ -263,7 +251,7 @@ function store_read(): array
     flock($handle, LOCK_UN);
     fclose($handle);
     $store = json_decode($contents ?: '', true);
-    return is_array($store) ? array_merge(['users' => [], 'carts' => [], 'orders' => []], $store) : ['users' => [], 'carts' => [], 'orders' => []];
+    return is_array($store) ? array_merge(empty_shop_store(), $store) : empty_shop_store();
 }
 
 function store_update(callable $callback): mixed
@@ -299,9 +287,9 @@ function store_update(callable $callback): mixed
     $contents = stream_get_contents($handle);
     $store = json_decode($contents ?: '', true);
     if (!is_array($store)) {
-        $store = ['users' => [], 'carts' => [], 'orders' => []];
+        $store = empty_shop_store();
     }
-    $store = array_merge(['users' => [], 'carts' => [], 'orders' => []], $store);
+    $store = array_merge(empty_shop_store(), $store);
     $result = $callback($store);
     rewind($handle);
     ftruncate($handle, 0);
@@ -380,6 +368,18 @@ if ($method !== 'POST') {
 }
 if (!isset($_SESSION['csrf']) || !hash_equals($_SESSION['csrf'], (string)($input['csrf'] ?? ''))) {
     fail('Your session has expired. Refresh the page and try again.', 419);
+}
+
+if ($action === 'newsletter_subscribe') {
+    $email = strtolower(trim((string)($input['email'] ?? '')));
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || text_length($email) > 254) {
+        fail('Please enter a valid email address.');
+    }
+    $added = save_newsletter_subscription($email);
+    respond([
+        'ok' => true,
+        'message' => $added ? 'You’re on the list. We’ll send the occasional studio note your way.' : 'You’re already on the list. We’ll be in touch when there’s something lovely to share.',
+    ]);
 }
 
 if ($action === 'register') {
