@@ -95,9 +95,9 @@
             <span class="eyebrow eyebrow-light">A few things we’ve learned along the way</span>
             <h2>Notes from the <em>flower table.</em></h2>
             <div class="journal-grid">
-                <article class="journal-card"><div class="journal-illustration journal-one"><span>✿</span><i>♡</i></div><small>FLOWER CARE</small><h3>Help your flowers last a little longer</h3><p>Fresh water, a clean vase, and a quick trim make a real difference.</p></article>
-                <article class="journal-card"><div class="journal-illustration journal-two"><span>❀</span><i>✳</i></div><small>GIFTING</small><h3>Sending flowers just because</h3><p>You don’t need a special date to let someone know they’re on your mind.</p></article>
-                <article class="journal-card"><div class="journal-illustration journal-three"><span>✼</span><i>♡</i></div><small>FROM THE STUDIO</small><h3>What we’re bringing in this week</h3><p>A peek at the seasonal stems we’ve been taking home ourselves.</p></article>
+                <article class="journal-card"><div class="journal-illustration journal-one"><img class="journal-photo" src="assets/images/notes-flower-care.jpg" alt="A sunny jar of mixed seasonal flowers" loading="lazy"></div><small>FLOWER CARE</small><h3>Help your flowers last a little longer</h3><p>Fresh water, a clean vase, and a quick trim make a real difference.</p></article>
+                <article class="journal-card"><div class="journal-illustration journal-two"><img class="journal-photo" src="assets/images/notes-gifting.jpg" alt="A hand-tied pink and peach bouquet" loading="lazy"></div><small>GIFTING</small><h3>Sending flowers just because</h3><p>You don’t need a special date to let someone know they’re on your mind.</p></article>
+                <article class="journal-card"><div class="journal-illustration journal-three"><img class="journal-photo" src="assets/images/notes-studio.jpg" alt="Pink carnations arranged with delicate white flowers" loading="lazy"></div><small>FROM THE STUDIO</small><h3>What we’re bringing in this week</h3><p>A peek at the seasonal stems we’ve been taking home ourselves.</p></article>
             </div>
         </section>
 
