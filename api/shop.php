@@ -76,6 +76,9 @@ function blob_read_object(string $path): array
         return ['found' => false, 'body' => '', 'etag' => null];
     }
     if ($result['status'] !== 200) {
+        $details = json_decode($result['body'], true);
+        $reason = is_array($details) ? ($details['error']['message'] ?? $details['message'] ?? '') : '';
+        error_log('Flowers and Bloom Blob GET HTTP ' . $result['status'] . ': ' . substr((string)$reason, 0, 240));
         throw new RuntimeException('Blob read returned HTTP ' . $result['status'] . '.');
     }
     return ['found' => true, 'body' => $result['body'], 'etag' => $result['headers']['etag'] ?? null];
