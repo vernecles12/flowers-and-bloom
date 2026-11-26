@@ -7,10 +7,6 @@
   },
   "rewrites": [
     {
-      "source": "/api.php",
-      "destination": "/api/shop.php"
-    },
-    {
       "source": "/",
       "destination": "/api/index.php"
     }

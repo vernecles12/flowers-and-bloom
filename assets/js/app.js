@@ -27,7 +27,7 @@
         }
         var response;
         try {
-            response = await fetch("api.php?action=" + encodeURIComponent(action), options);
+            response = await fetch("/api/shop.php?action=" + encodeURIComponent(action), options);
         } catch (error) {
             throw new Error("We couldn’t reach the flower studio. Please try again.");
         }
