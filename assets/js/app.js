@@ -8,6 +8,8 @@
     var pageSize = 8;
     var pendingProduct = null;
     var resetEmail = "";
+    var selectedProfileImage = null;
+    var removeProfileImage = false;
     var toastTimer;
     var homeSections = ["home", "shop", "our-story", "journal"];
     var productGrid = document.getElementById("product-grid");
@@ -155,7 +157,11 @@
     function renderAccount() {
         if (!state.user) return;
         document.getElementById("account-welcome").textContent = "Hello, " + state.user.name.split(/\s+/)[0];
-        document.getElementById("account-avatar").textContent = (state.user.name.trim()[0] || "✿").toUpperCase();
+        document.getElementById("account-avatar-initial").textContent = (state.user.name.trim()[0] || "✿").toUpperCase();
+        var avatarImage = document.getElementById("account-avatar-image");
+        avatarImage.classList.toggle("hidden", !state.user.profileImage);
+        document.getElementById("account-avatar-initial").classList.toggle("hidden", !!state.user.profileImage);
+        if (state.user.profileImage) avatarImage.src = state.user.profileImage;
         document.getElementById("profile-name").value = state.user.name;
         document.getElementById("profile-email").value = state.user.email;
         var orders = state.orders || [];
@@ -165,7 +171,7 @@
         document.getElementById("order-history").innerHTML = orders.length
             ? '<h3>Your orders</h3>' + orders.map(function (order) {
                 var date = new Date(order.createdAt);
-                return '<div class="order-row"><div><b>' + escapeHtml(order.id) + '</b><small>' + date.toLocaleDateString() + ' · ' + order.items.length + (order.items.length === 1 ? ' bouquet' : ' bouquets') + '</small></div><div class="order-status">' + escapeHtml(order.status) + ' · ' + money.format(order.total) + '</div></div>';
+                return '<div class="order-row"><div><b>' + escapeHtml(order.id) + '</b><small>' + date.toLocaleDateString() + ' · ' + order.items.length + (order.items.length === 1 ? ' bouquet' : ' bouquets') + ' · ' + escapeHtml(order.paymentMethod || 'Payment method not recorded') + '</small></div><div class="order-status">' + escapeHtml(order.status) + (order.paymentStatus ? ' · ' + escapeHtml(order.paymentStatus) : '') + ' · ' + money.format(order.total) + '</div></div>';
             }).join("")
             : "";
     }
@@ -285,6 +291,20 @@
         state.orders = result.orders;
         setHeader();
         renderProducts();
+    }
+
+    function handlePaymentReturn() {
+        var params = new URLSearchParams(window.location.search);
+        var paymentResult = params.get("payment");
+        if (!paymentResult) return;
+        var orderReference = params.get("reference") || "";
+        window.history.replaceState({}, "", window.location.pathname + window.location.hash);
+        if (paymentResult === "success") {
+            var matchedOrder = (state.orders || []).find(function (order) { return order.id === orderReference; });
+            floralNotice(matchedOrder && matchedOrder.paymentStatus === "Paid" ? "Payment received" : "Payment submitted", matchedOrder && matchedOrder.paymentStatus === "Paid" ? "PayMongo confirmed your payment. Your order is now in the studio queue." : "Thanks for checking out. PayMongo is confirming the payment now; your order will update as soon as it is verified.", "Lovely");
+        } else if (paymentResult === "cancel") {
+            notify("Checkout was cancelled. Your flowers are still in your cart.");
+        }
     }
 
     document.getElementById("year").textContent = new Date().getFullYear();
@@ -423,13 +443,17 @@
         button.disabled = true;
         try {
             var result = await api("checkout", formData(this));
+            if (result.checkoutUrl) {
+                window.location.assign(result.checkoutUrl);
+                return;
+            }
             state.cart = result.cart;
             state.orders.unshift(result.order);
             this.reset();
             closeModal("checkout-modal");
             renderCart();
             setHeader();
-            await floralNotice("Order received", "We’ve saved order " + escapeHtml(result.order.id) + ". Thanks for shopping with us.", "View account");
+            await floralNotice("Order received", "We’ve saved order " + escapeHtml(result.order.id) + " with " + escapeHtml(result.order.paymentMethod) + ". Thanks for shopping with us.", "View account");
             showPage("account");
         } catch (error) {
             notify(error.message);
@@ -439,12 +463,52 @@
         event.preventDefault();
         var values = formData(this);
         try {
-            var result = await api("update_profile", { name: values.name, currentPassword: values.currentPassword, newPassword: values.newPassword });
+            var result = await api("update_profile", { name: values.name, currentPassword: values.currentPassword, newPassword: values.newPassword, profileImage: selectedProfileImage, removeProfileImage: removeProfileImage });
             state.user = result.user;
             this.reset();
+            selectedProfileImage = null;
+            removeProfileImage = false;
             renderAccount();
             notify(result.message);
         } catch (error) { notify(error.message); }
+    });
+    document.getElementById("profile-photo-input").addEventListener("change", function () {
+        var file = this.files && this.files[0];
+        if (!file) return;
+        if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 5 * 1024 * 1024) {
+            this.value = "";
+            notify("Choose a JPG, PNG, or WebP photo under 5 MB.");
+            return;
+        }
+        var reader = new FileReader();
+        reader.onload = function () {
+            var image = new Image();
+            image.onload = function () {
+                var canvas = document.createElement("canvas");
+                var scale = Math.min(1, 480 / Math.max(image.width, image.height));
+                canvas.width = Math.max(1, Math.round(image.width * scale));
+                canvas.height = Math.max(1, Math.round(image.height * scale));
+                canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+                selectedProfileImage = canvas.toDataURL("image/jpeg", .78);
+                removeProfileImage = false;
+                var preview = document.getElementById("account-avatar-image");
+                preview.src = selectedProfileImage;
+                preview.classList.remove("hidden");
+                document.getElementById("account-avatar-initial").classList.add("hidden");
+                notify("Photo ready. Save your details to keep it on your account.");
+            };
+            image.onerror = function () { notify("That photo could not be opened. Try another image."); };
+            image.src = String(reader.result);
+        };
+        reader.readAsDataURL(file);
+    });
+    document.getElementById("remove-profile-photo").addEventListener("click", function () {
+        selectedProfileImage = null;
+        removeProfileImage = true;
+        document.getElementById("profile-photo-input").value = "";
+        document.getElementById("account-avatar-image").classList.add("hidden");
+        document.getElementById("account-avatar-initial").classList.remove("hidden");
+        notify("Save your details to remove the current profile photo.");
     });
     document.getElementById("newsletter-form").addEventListener("submit", async function (event) {
         event.preventDefault();
@@ -454,15 +518,24 @@
         try {
             var result = await api("newsletter_subscribe", { email: form.elements.email.value });
             form.reset();
-            await floralNotice("Thanks for stopping by", escapeHtml(result.message), "Sounds good");
+            document.getElementById("newsletter-result").textContent = result.message;
+            document.getElementById("newsletter-result").classList.remove("hidden");
+            document.getElementById("newsletter-change").classList.remove("hidden");
+            form.classList.add("hidden");
         } catch (error) {
             notify(error.message);
         } finally {
             button.disabled = false;
         }
     });
+    document.getElementById("newsletter-change").addEventListener("click", function () {
+        document.getElementById("newsletter-result").classList.add("hidden");
+        this.classList.add("hidden");
+        document.getElementById("newsletter-form").classList.remove("hidden");
+        document.getElementById("newsletter-email").focus();
+    });
 
-    refreshState().catch(function (error) {
+    refreshState().then(handlePaymentReturn).catch(function (error) {
         notify(error.message);
         productGrid.innerHTML = '<div class="empty-products">We’re arranging the flower table. Please refresh in a moment.</div>';
     });
