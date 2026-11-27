@@ -7,12 +7,11 @@
     var currentPage = 1;
     var pageSize = 8;
     var pendingProduct = null;
-    var pendingDestination = null;
     var resetEmail = "";
     var selectedProfileImage = null;
     var removeProfileImage = false;
     var toastTimer;
-    var homeSections = ["home", "our-story", "journal"];
+    var homeSections = ["home", "shop", "our-story", "journal"];
     var productGrid = document.getElementById("product-grid");
     var money = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 });
     var scriptBasePath = document.currentScript ? new URL("../../", document.currentScript.src).pathname : "/";
@@ -185,9 +184,8 @@
         });
     }
 
-    async function askToSignIn(message, productId, destination) {
+    async function askToSignIn(message, productId) {
         pendingProduct = productId || null;
-        pendingDestination = destination || null;
         var result = await floralAlert({
             title: "Please sign in first",
             text: message || "Sign in to continue with your flowers.",
@@ -201,7 +199,6 @@
             openAuth("login");
         } else {
             pendingProduct = null;
-            pendingDestination = null;
         }
     }
 
@@ -221,10 +218,9 @@
             document.getElementById(id).classList.toggle("hidden", !onHomePage);
         });
 
-        // The flower catalogue and Studio Letters are visible only to signed-in visitors.
-        var canViewMemberSections = Boolean(state.user) && onHomePage;
-        document.getElementById("shop").classList.toggle("hidden", !canViewMemberSections);
-        document.getElementById("studio-letters").classList.toggle("hidden", !canViewMemberSections);
+        // The flower catalogue is public. Keep Studio Letters account-gated.
+        var canViewStudioLetters = Boolean(state.user) && onHomePage;
+        document.getElementById("studio-letters").classList.toggle("hidden", !canViewStudioLetters);
     }
 
     function setHeader() {
@@ -452,10 +448,6 @@
     }
 
     function showPage(nextPage) {
-        if (nextPage === "shop" && !state.user) {
-            askToSignIn("Please sign in to view our flower collection.", null, "shop");
-            return;
-        }
         if (nextPage === "admin" && !(state.user && state.user.isAdmin)) {
             notify("The studio dashboard is for authorised staff only.");
             return;
@@ -530,15 +522,10 @@
             closeModal("auth-modal");
             form.reset();
             showWelcome(result.user, result.welcomeType);
-            var destination = pendingDestination;
-            pendingDestination = null;
             if (pendingProduct) {
                 var product = pendingProduct;
                 pendingProduct = null;
                 await addProduct(product);
-            } else if (destination === "shop") {
-                showPage("home");
-                document.getElementById("shop").scrollIntoView({ behavior: "smooth" });
             } else if (page === "account") {
                 renderAccount();
             }
@@ -711,12 +698,8 @@
             var href = link.getAttribute("href");
             if (href === "#shop") {
                 event.preventDefault();
-                if (!state.user) {
-                    askToSignIn("Please sign in to view our flower collection.", null, "shop");
-                } else {
-                    showPage("home");
-                    document.getElementById("shop").scrollIntoView({ behavior: "smooth" });
-                }
+                showPage("home");
+                document.getElementById("shop").scrollIntoView({ behavior: "smooth" });
             } else if (href === "#account-view") {
                 if (state.user) showPage("account");
                 else openAuth("login");
@@ -731,14 +714,10 @@
         });
     });
 
-    // The hero Browse button, scroll cue and footer Shop links follow the same rule as the navbar.
+    // The hero Browse button, scroll cue and footer Shop links are public.
     document.querySelectorAll('a[href="#shop"]:not(.nav-link)').forEach(function (link) {
         link.addEventListener("click", function (event) {
             event.preventDefault();
-            if (!state.user) {
-                askToSignIn("Please sign in to view our flower collection.", null, "shop");
-                return;
-            }
             showPage("home");
             document.getElementById("shop").scrollIntoView({ behavior: "smooth" });
         });
