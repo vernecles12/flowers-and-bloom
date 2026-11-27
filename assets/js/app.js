@@ -1,7 +1,7 @@
 (function () {
     "use strict";
 
-    var state = { csrf: "", user: null, products: [], cart: { items: [], total: 0, count: 0 }, orders: [] };
+    var state = { csrf: "", user: null, products: [], cart: { items: [], total: 0, count: 0 }, orders: [], favorites: [], adminData: null };
     var page = "home";
     var category = "all";
     var currentPage = 1;
@@ -82,6 +82,8 @@
             state.user = refreshed.result.user || null;
             state.cart = refreshed.result.cart || { items: [], total: 0, count: 0 };
             state.orders = refreshed.result.orders || [];
+            state.favorites = refreshed.result.favorites || [];
+            setHeader();
             request = await sendApiRequest(action, data);
         }
 
@@ -216,12 +218,51 @@
         var cartCount = Number(state.cart.count || 0);
         document.getElementById("cart-count").textContent = cartCount;
         document.getElementById("cart-shortcut").setAttribute("aria-label", "My Cart, " + cartCount + (cartCount === 1 ? " item" : " items"));
+        var savedCount = state.favorites.length;
+        document.getElementById("wishlist-count").textContent = savedCount;
+        document.getElementById("wishlist-shortcut").setAttribute("aria-label", "Saved flowers, " + savedCount + (savedCount === 1 ? " item" : " items"));
+        document.getElementById("admin-nav-link").classList.toggle("hidden", !(state.user && state.user.isAdmin));
+    }
+
+    function productCardMarkup(product, index) {
+        var detailsReviews = product.reviews || [];
+        var stock = Number(product.stock == null ? 12 : product.stock);
+        var saved = state.favorites.indexOf(product.id) !== -1;
+        var outOfStock = stock <= 0;
+        var stockText = outOfStock ? "Sold out" : (stock <= 3 ? "Only " + stock + " left" : "In stock");
+        return '<article class="product-card" style="animation-delay:' + (index * 35) + 'ms">' +
+            '<div class="product-photo"><span class="product-tag">' + escapeHtml(product.tag) + '</span>' +
+            '<img src="assets/images/' + encodeURIComponent(product.image) + '" alt="' + escapeHtml(product.name) + ' bouquet" loading="lazy" onerror="this.style.opacity=0.15;this.alt=\'Flower photo loading soon\'">' +
+            '<button class="product-photo-link" data-product-details="' + escapeHtml(product.id) + '" aria-label="See ' + escapeHtml(product.name) + ' ratings and customer notes"></button>' +
+            '<button class="save-flower-button ' + (saved ? "saved" : "") + '" type="button" data-favorite="' + escapeHtml(product.id) + '" aria-pressed="' + (saved ? "true" : "false") + '" aria-label="' + (saved ? "Remove " : "Save ") + escapeHtml(product.name) + (saved ? " from saved flowers" : " to saved flowers") + '">' + (saved ? "♥" : "♡") + '</button></div>' +
+            '<div class="product-card-top"><h3>' + escapeHtml(product.name) + '</h3><span class="product-price">' + money.format(product.price) + '</span></div>' +
+            '<button class="rating-summary" data-product-details="' + escapeHtml(product.id) + '" aria-label="Rated ' + Number(product.rating || 0).toFixed(1) + ' out of 5. Read sample customer notes">' +
+            '<span class="rating-stars" aria-hidden="true">★★★★★</span><b>' + Number(product.rating || 0).toFixed(1) + '</b><span>· ' + detailsReviews.length + ' sample notes</span></button>' +
+            '<p class="product-description">' + escapeHtml(product.description) + '</p>' +
+            '<div class="product-card-footer"><small class="product-stock ' + (outOfStock ? "sold-out" : (stock <= 3 ? "low-stock" : "")) + '">' + stockText + '</small>' +
+            '<button class="add-button" data-add="' + escapeHtml(product.id) + '"' + (outOfStock ? " disabled" : "") + '>' + (outOfStock ? "Sold out" : "Add to bag") + ' <span>+</span></button></div></article>';
+    }
+
+    function filteredProducts() {
+        var search = (document.getElementById("product-search").value || "").trim().toLowerCase();
+        var sort = document.getElementById("product-sort").value;
+        var filtered = state.products.filter(function (product) {
+            var categoryMatch = category === "all" || product.category === category;
+            var searchable = [product.name, product.category, product.description, product.tag].join(" ").toLowerCase();
+            return categoryMatch && (!search || searchable.indexOf(search) !== -1);
+        });
+        filtered.sort(function (a, b) {
+            if (sort === "price-low") return Number(a.price) - Number(b.price);
+            if (sort === "price-high") return Number(b.price) - Number(a.price);
+            if (sort === "name") return a.name.localeCompare(b.name);
+            if (sort === "rating") return Number(b.rating || 0) - Number(a.rating || 0);
+            return 0;
+        });
+        return filtered;
     }
 
     function renderProducts() {
-        var filtered = state.products.filter(function (product) {
-            return category === "all" || product.category === category;
-        });
+        var filtered = filteredProducts();
         var pages = Math.max(1, Math.ceil(filtered.length / pageSize));
         currentPage = Math.min(currentPage, pages);
         var start = (currentPage - 1) * pageSize;
@@ -232,21 +273,38 @@
         document.getElementById("page-prev").disabled = currentPage <= 1;
         document.getElementById("page-next").disabled = currentPage >= pages;
         if (!items.length) {
-            productGrid.innerHTML = '<div class="empty-products">There aren’t any flowers in this little corner just yet.</div>';
+            productGrid.innerHTML = '<div class="empty-products">No flowers match that search. Try a different name or category.</div>';
             return;
         }
-        productGrid.innerHTML = items.map(function (product, index) {
-            var detailsReviews = product.reviews || [];
-            return '<article class="product-card" style="animation-delay:' + (index * 45) + 'ms">' +
-                '<div class="product-photo"><span class="product-tag">' + escapeHtml(product.tag) + '</span>' +
-                '<img src="assets/images/' + encodeURIComponent(product.image) + '" alt="' + escapeHtml(product.name) + ' bouquet" loading="lazy" onerror="this.style.opacity=0.15;this.alt=\'Flower photo loading soon\'">' +
-                '<button class="product-photo-link" data-product-details="' + escapeHtml(product.id) + '" aria-label="See ' + escapeHtml(product.name) + ' ratings and customer notes"></button></div>' +
-                '<div class="product-card-top"><h3>' + escapeHtml(product.name) + '</h3><span class="product-price">' + money.format(product.price) + '</span></div>' +
-                '<button class="rating-summary" data-product-details="' + escapeHtml(product.id) + '" aria-label="Rated ' + Number(product.rating || 0).toFixed(1) + ' out of 5. Read sample customer notes">' +
-                '<span class="rating-stars" aria-hidden="true">★★★★★</span><b>' + Number(product.rating || 0).toFixed(1) + '</b><span>· ' + detailsReviews.length + ' sample notes</span></button>' +
-                '<p class="product-description">' + escapeHtml(product.description) + '</p>' +
-                '<button class="add-button" data-add="' + escapeHtml(product.id) + '">Add to bag <span>+</span></button></article>';
-        }).join("");
+        productGrid.innerHTML = items.map(productCardMarkup).join("");
+    }
+
+    function renderWishlist() {
+        var root = document.getElementById("wishlist-grid");
+        var saved = state.products.filter(function (product) { return state.favorites.indexOf(product.id) !== -1; });
+        document.getElementById("wishlist-count-label").textContent = saved.length + (saved.length === 1 ? " saved bouquet" : " saved bouquets");
+        if (!saved.length) {
+            root.innerHTML = '<div class="empty-products wishlist-empty"><span>♡</span><h3>No saved flowers yet.</h3><p>Tap the heart on a bouquet to keep it here for later.</p><button class="button button-dark" data-go-shop>Browse flowers <span>→</span></button></div>';
+            return;
+        }
+        root.innerHTML = saved.map(productCardMarkup).join("");
+    }
+
+    async function toggleFavorite(productId) {
+        if (!state.user) {
+            await askToSignIn("Please sign in first to save your favourite flowers.", productId);
+            return;
+        }
+        try {
+            var result = await api("toggle_favorite", { productId: productId });
+            state.favorites = result.favorites || [];
+            setHeader();
+            renderProducts();
+            if (page === "wishlist") renderWishlist();
+            notify(state.favorites.indexOf(productId) !== -1 ? "Added to your saved flowers." : "Removed from saved flowers.");
+        } catch (error) {
+            notify(error.message);
+        }
     }
 
     function openProductDetails(productId) {
@@ -281,6 +339,21 @@
         }).join("");
     }
 
+    function orderTimelineMarkup(order) {
+        var status = String(order.status || "Received");
+        if (status === "Cancelled") {
+            return '<div class="order-tracking cancelled"><b>Order cancelled</b><span>This order will not be prepared for delivery.</span></div>';
+        }
+        if (status === "Awaiting manual payment") {
+            return '<div class="order-tracking waiting"><b>Awaiting manual payment</b><span>The shop will confirm your GCash transfer before preparing the flowers.</span></div>';
+        }
+        var steps = ["Received", "Confirmed", "Preparing", "Out for delivery", "Delivered"];
+        var current = Math.max(0, steps.indexOf(status));
+        return '<div class="order-progress" aria-label="Order progress">' + steps.map(function (step, index) {
+            return '<div class="order-progress-step ' + (index < current ? "complete" : (index === current ? "current" : "")) + '"><span>' + (index < current ? "✓" : (index + 1)) + '</span><small>' + step + '</small></div>';
+        }).join("") + '</div>';
+    }
+
     function renderAccount() {
         if (!state.user) return;
         document.getElementById("account-welcome").textContent = "Hello, " + state.user.name.split(/\s+/)[0];
@@ -298,24 +371,95 @@
         document.getElementById("order-history").innerHTML = orders.length
             ? '<h3>Your orders</h3>' + orders.map(function (order) {
                 var date = new Date(order.createdAt);
-                return '<div class="order-row"><div><b>' + escapeHtml(order.id) + '</b><small>' + date.toLocaleDateString() + ' · ' + order.items.length + (order.items.length === 1 ? ' bouquet' : ' bouquets') + ' · ' + escapeHtml(order.paymentMethod || 'Payment method not recorded') + '</small></div><div class="order-status">' + escapeHtml(order.status) + (order.paymentStatus ? ' · ' + escapeHtml(order.paymentStatus) : '') + ' · ' + money.format(order.total) + '</div></div>';
+                var history = order.statusHistory || [];
+                var lineItems = (order.items || []).map(function (item) {
+                    return '<li>' + escapeHtml(item.name) + ' × ' + Number(item.quantity || 1) + '</li>';
+                }).join("");
+                var updates = history.slice(-5).map(function (entry) {
+                    return '<li><b>' + escapeHtml(entry.status) + '</b><small>' + new Date(entry.at).toLocaleString() + '</small></li>';
+                }).join("");
+                return '<article class="customer-order-card"><div class="customer-order-top"><div><b>' + escapeHtml(order.id) + '</b><small>' + date.toLocaleDateString() + ' · ' + (order.items || []).length + ((order.items || []).length === 1 ? ' bouquet' : ' bouquets') + '</small></div><div class="customer-order-total">' + money.format(order.total) + '</div></div>' +
+                    '<div class="customer-order-status"><span>Fulfilment</span><b>' + escapeHtml(order.status || "Received") + '</b></div>' + orderTimelineMarkup(order) +
+                    '<div class="customer-order-payment">' + escapeHtml(order.paymentMethod || "Payment method not recorded") + ' · ' + escapeHtml(order.paymentStatus || "Payment status pending") + '</div>' +
+                    '<details class="customer-order-details"><summary>Delivery details and updates</summary><div class="customer-order-detail-grid"><div><small>Recipient</small><b>' + escapeHtml(order.recipient || "—") + '</b></div><div><small>Contact</small><b>' + escapeHtml(order.phone || "—") + '</b></div><div class="wide"><small>Delivery address</small><b>' + escapeHtml(order.address || "—") + '</b></div><div class="wide"><small>Items</small><ul>' + lineItems + '</ul></div><div class="wide"><small>Order updates</small><ol>' + (updates || '<li>Order placed</li>') + '</ol></div></div></details></article>';
             }).join("")
-            : "";
+            : '<div class="order-empty"><span>✿</span><b>Your next lovely delivery starts here.</b><p>Orders you place will appear here with their fulfilment progress.</p></div>';
+    }
+
+    function allowedNextStatuses(status) {
+        var transitions = {
+            "Awaiting manual payment": ["Confirmed", "Cancelled"],
+            "Received": ["Confirmed", "Preparing", "Cancelled"],
+            "Confirmed": ["Preparing", "Cancelled"],
+            "Preparing": ["Out for delivery", "Cancelled"],
+            "Out for delivery": ["Delivered"]
+        };
+        return transitions[status] || [];
+    }
+
+    function renderAdmin() {
+        if (!state.adminData) return;
+        var data = state.adminData;
+        var summary = data.summary || {};
+        var root = document.getElementById("admin-content");
+        var stats = [
+            ["Orders", summary.orders || 0],
+            ["Open orders", summary.openOrders || 0],
+            ["Delivered", summary.deliveredOrders || 0],
+            ["Order value", money.format(summary.orderValueTotal || 0)],
+            ["Low-stock flowers", summary.lowStock || 0],
+            ["Customers", summary.customers || 0]
+        ];
+        var statsHtml = '<div class="admin-stat-grid">' + stats.map(function (entry) {
+            return '<article class="admin-stat"><small>' + entry[0] + '</small><b>' + entry[1] + '</b></article>';
+        }).join("") + '</div>';
+        var orders = data.orders || [];
+        var orderHtml = orders.length ? orders.map(function (order) {
+            var options = [order.status].concat(allowedNextStatuses(order.status));
+            return '<article class="admin-order-card"><div class="admin-order-info"><b>' + escapeHtml(order.id) + '</b><span>' + escapeHtml(order.customerName) + ' · ' + escapeHtml(order.customerEmail) + '</span><small>' + new Date(order.createdAt).toLocaleString() + ' · ' + money.format(order.total) + '</small><small>' + escapeHtml(order.recipient || "") + ' · ' + escapeHtml(order.address || "") + '</small></div><div class="admin-order-controls"><label>Order status<select data-admin-order-status="' + escapeHtml(order.id) + '">' + options.map(function (status) { return '<option value="' + escapeHtml(status) + '"' + (status === order.status ? " selected" : "") + '>' + escapeHtml(status) + '</option>'; }).join("") + '</select></label><button class="button button-dark admin-save-button" data-save-order="' + escapeHtml(order.id) + '">Save status</button></div></article>';
+        }).join("") : '<p class="admin-empty">No orders have been placed yet.</p>';
+        var products = data.products || [];
+        var productHtml = products.map(function (product) {
+            return '<article class="admin-stock-row"><div><b>' + escapeHtml(product.name) + '</b><small>' + escapeHtml(product.category) + ' · ' + money.format(product.price) + '</small></div><label>Units in stock<input type="number" min="0" max="5000" step="1" value="' + Number(product.stock) + '" data-admin-stock="' + escapeHtml(product.id) + '"></label><button class="button button-outline admin-save-button" data-save-stock="' + escapeHtml(product.id) + '">Update</button></article>';
+        }).join("");
+        root.innerHTML = statsHtml + '<div class="admin-panel-grid"><section class="admin-panel"><div class="admin-panel-heading"><div><span class="eyebrow eyebrow-light">Order fulfilment</span><h3>Recent orders</h3></div><span>' + orders.length + ' shown</span></div>' + orderHtml + '</section><section class="admin-panel"><div class="admin-panel-heading"><div><span class="eyebrow eyebrow-light">Stock control</span><h3>Flower inventory</h3></div><span>Updates apply at checkout</span></div>' + productHtml + '</section></div>';
+    }
+
+    async function loadAdmin() {
+        if (!state.user || !state.user.isAdmin) return;
+        try {
+            state.adminData = await api("admin_dashboard", null);
+            renderAdmin();
+        } catch (error) {
+            notify(error.message);
+        }
     }
 
     function showPage(nextPage) {
+        if (nextPage === "admin" && !(state.user && state.user.isAdmin)) {
+            notify("The studio dashboard is for authorised staff only.");
+            return;
+        }
+        if (nextPage === "wishlist" && !state.user) {
+            askToSignIn("Please sign in to see your saved flowers.");
+            return;
+        }
         page = nextPage;
         homeSections.forEach(function (id) { document.getElementById(id).classList.toggle("hidden", nextPage !== "home"); });
         document.getElementById("cart-view").classList.toggle("hidden", nextPage !== "cart");
         document.getElementById("account-view").classList.toggle("hidden", nextPage !== "account");
+        document.getElementById("wishlist-view").classList.toggle("hidden", nextPage !== "wishlist");
+        document.getElementById("admin-view").classList.toggle("hidden", nextPage !== "admin");
         document.querySelectorAll(".nav-link").forEach(function (link) {
-            link.classList.toggle("active", (nextPage === "home" && link.getAttribute("href") === "#home") || (nextPage === "shop" && link.getAttribute("href") === "#shop") || (nextPage === "account" && link.getAttribute("href") === "#account-view"));
+            link.classList.toggle("active", (nextPage === "home" && link.getAttribute("href") === "#home") || (nextPage === "shop" && link.getAttribute("href") === "#shop") || (nextPage === "account" && link.getAttribute("href") === "#account-view") || (nextPage === "admin" && link.getAttribute("href") === "#admin-view"));
         });
         if (nextPage === "cart") renderCart();
         if (nextPage === "account") renderAccount();
+        if (nextPage === "wishlist") renderWishlist();
+        if (nextPage === "admin") loadAdmin();
         document.getElementById("main-nav").classList.remove("open");
         document.getElementById("mobile-menu-button").setAttribute("aria-expanded", "false");
-        if (nextPage === "cart" || nextPage === "account") window.scrollTo({ top: 0, behavior: "smooth" });
+        if (nextPage !== "home") window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     function openModal(id) {
@@ -361,6 +505,7 @@
             state.user = result.user;
             state.cart = result.cart || { items: [], total: 0, count: 0 };
             state.orders = result.orders || [];
+            state.favorites = result.favorites || [];
             setHeader();
             closeModal("auth-modal");
             form.reset();
@@ -422,6 +567,7 @@
         state.products = result.products;
         state.cart = result.cart;
         state.orders = result.orders;
+        state.favorites = result.favorites || [];
         setHeader();
         renderProducts();
     }
@@ -437,7 +583,41 @@
             renderProducts();
         });
     });
+    document.getElementById("product-search").addEventListener("input", function () {
+        currentPage = 1;
+        renderProducts();
+    });
+    document.getElementById("product-sort").addEventListener("change", function () {
+        currentPage = 1;
+        renderProducts();
+    });
     document.addEventListener("click", function (event) {
+        var favorite = event.target.closest("[data-favorite]");
+        if (favorite) { toggleFavorite(favorite.dataset.favorite); return; }
+        var saveOrder = event.target.closest("[data-save-order]");
+        if (saveOrder) {
+            var orderStatus = Array.from(document.querySelectorAll("[data-admin-order-status]")).find(function (control) { return control.dataset.adminOrderStatus === saveOrder.dataset.saveOrder; });
+            if (orderStatus) {
+                api("admin_update_order_status", { orderId: saveOrder.dataset.saveOrder, status: orderStatus.value }).then(function () {
+                    return loadAdmin();
+                }).then(function () {
+                    floralNotice("Order updated", "The fulfilment status has been saved.", "Lovely");
+                }).catch(function (error) { notify(error.message); });
+            }
+            return;
+        }
+        var saveStock = event.target.closest("[data-save-stock]");
+        if (saveStock) {
+            var stockInput = Array.from(document.querySelectorAll("[data-admin-stock]")).find(function (control) { return control.dataset.adminStock === saveStock.dataset.saveStock; });
+            if (stockInput) {
+                api("admin_update_inventory", { productId: saveStock.dataset.saveStock, stock: stockInput.value }).then(function () {
+                    return refreshState().then(loadAdmin);
+                }).then(function () {
+                    floralNotice("Inventory saved", "The available quantity has been updated.", "Lovely");
+                }).catch(function (error) { notify(error.message); });
+            }
+            return;
+        }
         var details = event.target.closest("[data-product-details]");
         if (details) { openProductDetails(details.dataset.productDetails); return; }
         var add = event.target.closest("[data-add]");
@@ -460,6 +640,13 @@
         }
     });
 
+    document.getElementById("wishlist-shortcut").addEventListener("click", function () {
+        if (!state.user) {
+            askToSignIn("Please sign in to see your saved flowers.");
+            return;
+        }
+        showPage("wishlist");
+    });
     document.getElementById("cart-shortcut").addEventListener("click", function () {
         if (!state.user) {
             askToSignIn("Please sign in first to view your cart.");
@@ -486,6 +673,8 @@
             state.user = null;
             state.cart = { items: [], total: 0, count: 0 };
             state.orders = [];
+            state.favorites = [];
+            state.adminData = null;
             setHeader();
             showPage("home");
             notify("You’ve signed out. Come back any time.");
@@ -497,6 +686,8 @@
             if (href === "#account-view") {
                 if (state.user) showPage("account");
                 else openAuth("login");
+            } else if (href === "#admin-view") {
+                showPage("admin");
             } else {
                 showPage("home");
                 if (href === "#home") window.scrollTo({ top: 0, behavior: "smooth" });

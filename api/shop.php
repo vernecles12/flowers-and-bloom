@@ -6,6 +6,7 @@ header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 
 require_once __DIR__ . '/lib/catalog.php';
 require_once __DIR__ . '/lib/newsletter.php';
+require_once __DIR__ . '/lib/management.php';
 
 function is_vercel_runtime(): bool
 {
@@ -155,7 +156,14 @@ function blob_write_object(string $path, string $body, ?string $etag = null, boo
 
 function empty_shop_store(): array
 {
-    return ['users' => [], 'carts' => [], 'orders' => [], 'newsletter' => []];
+    return [
+        'users' => [],
+        'carts' => [],
+        'orders' => [],
+        'newsletter' => [],
+        'wishlists' => [],
+        'inventory' => [],
+    ];
 }
 
 function vercel_shop_store_snapshot(): array
@@ -363,7 +371,14 @@ function store_update(callable $callback): mixed
 
 function public_user(array $user): array
 {
-    return ['id' => $user['id'], 'name' => $user['name'], 'email' => $user['email'], 'createdAt' => $user['createdAt'], 'profileImage' => $user['profileImage'] ?? null];
+    return [
+        'id' => $user['id'],
+        'name' => $user['name'],
+        'email' => $user['email'],
+        'createdAt' => $user['createdAt'],
+        'profileImage' => $user['profileImage'] ?? null,
+        'isAdmin' => shop_is_admin($user),
+    ];
 }
 
 function current_user_from_store(array $store): ?array
@@ -395,7 +410,7 @@ function cart_summary(array $store, string $userId): array
     $items = [];
     $total = 0;
     foreach (($store['carts'][$userId] ?? []) as $id => $quantity) {
-        foreach (products() as $product) {
+        foreach (shop_products_for_store($store) as $product) {
             if ($product['id'] === $id && (int)$quantity > 0) {
                 $product['quantity'] = (int)$quantity;
                 $product['lineTotal'] = $product['price'] * $product['quantity'];
@@ -426,7 +441,33 @@ if ($action === 'state' && $method === 'GET') {
     }
     $cart = $user ? cart_summary($store, $user['id']) : ['items' => [], 'total' => 0, 'count' => 0];
     $orders = $user ? array_values(array_filter($store['orders'], fn($order) => $order['userId'] === $user['id'])) : [];
-    respond(['ok' => true, 'csrf' => $_SESSION['csrf'], 'user' => $user ? public_user($user) : null, 'products' => products(), 'cart' => $cart, 'orders' => array_reverse($orders)]);
+    foreach ($orders as &$customerOrder) {
+        if (isset($customerOrder['statusHistory']) && is_array($customerOrder['statusHistory'])) {
+            foreach ($customerOrder['statusHistory'] as &$historyEntry) {
+                if (isset($historyEntry['updatedBy'])) {
+                    $historyEntry['updatedBy'] = 'Shop team';
+                }
+            }
+            unset($historyEntry);
+        }
+    }
+    unset($customerOrder);
+    respond([
+        'ok' => true,
+        'csrf' => $_SESSION['csrf'],
+        'user' => $user ? public_user($user) : null,
+        'products' => shop_products_for_store($store),
+        'cart' => $cart,
+        'orders' => array_reverse($orders),
+        'favorites' => $user ? shop_favorites($store, $user['id']) : [],
+    ]);
+}
+
+if ($action === 'admin_dashboard' && $method === 'GET') {
+    $adminStore = store_read();
+    $adminUser = require_user($adminStore);
+    require_shop_admin($adminUser);
+    respond(['ok' => true] + shop_admin_dashboard_data($adminStore));
 }
 
 if ($method !== 'POST') {
@@ -515,6 +556,7 @@ if ($action === 'register') {
         'welcomeType' => $registration['welcomeType'],
         'cart' => cart_summary($authenticatedStore, $registration['user']['id']),
         'orders' => array_reverse($orders),
+        'favorites' => shop_favorites($authenticatedStore, $registration['user']['id']),
     ]);
 }
 
@@ -541,7 +583,14 @@ if ($action === 'login') {
     $_SESSION['user_id'] = $result['user']['id'];
     $authenticatedStore = store_read();
     $orders = array_values(array_filter($authenticatedStore['orders'], fn($order) => $order['userId'] === $result['user']['id']));
-    respond(['ok' => true, 'user' => public_user($result['user']), 'welcomeType' => $result['welcomeType'], 'cart' => cart_summary($authenticatedStore, $result['user']['id']), 'orders' => array_reverse($orders)]);
+    respond([
+        'ok' => true,
+        'user' => public_user($result['user']),
+        'welcomeType' => $result['welcomeType'],
+        'cart' => cart_summary($authenticatedStore, $result['user']['id']),
+        'orders' => array_reverse($orders),
+        'favorites' => shop_favorites($authenticatedStore, $result['user']['id']),
+    ]);
 }
 
 if ($action === 'request_reset') {
@@ -607,6 +656,109 @@ $store = store_read();
 $user = require_user($store);
 $userId = $user['id'];
 
+if ($action === 'toggle_favorite') {
+    $productId = (string)($input['productId'] ?? '');
+    $validProductIds = array_column(products(), 'id');
+    if (!in_array($productId, $validProductIds, true)) {
+        fail('That flower could not be found.', 404);
+    }
+    $favorites = store_update(function (&$store) use ($userId, $productId) {
+        $saved = shop_favorites($store, $userId);
+        if (in_array($productId, $saved, true)) {
+            $saved = array_values(array_filter($saved, static fn(string $id): bool => $id !== $productId));
+        } else {
+            $saved[] = $productId;
+        }
+        $store['wishlists'][$userId] = $saved;
+        return $saved;
+    });
+    respond(['ok' => true, 'favorites' => $favorites]);
+}
+
+if ($action === 'admin_update_order_status') {
+    require_shop_admin($user);
+    $orderId = trim((string)($input['orderId'] ?? ''));
+    $nextStatus = trim((string)($input['status'] ?? ''));
+    $transitions = [
+        'Awaiting manual payment' => ['Confirmed', 'Cancelled'],
+        'Received' => ['Confirmed', 'Preparing', 'Cancelled'],
+        'Confirmed' => ['Preparing', 'Cancelled'],
+        'Preparing' => ['Out for delivery', 'Cancelled'],
+        'Out for delivery' => ['Delivered'],
+        'Delivered' => [],
+        'Cancelled' => [],
+    ];
+    if (!isset($transitions[$nextStatus]) && $nextStatus !== 'Awaiting manual payment') {
+        fail('Choose a valid order status.');
+    }
+    $updated = store_update(function (&$store) use ($orderId, $nextStatus, $transitions, $user) {
+        foreach ($store['orders'] as &$order) {
+            if (($order['id'] ?? '') !== $orderId) {
+                continue;
+            }
+            $currentStatus = (string)($order['status'] ?? 'Received');
+            if (!in_array($nextStatus, $transitions[$currentStatus] ?? [], true)) {
+                return ['error' => 'That status change is not allowed from the current order stage.'];
+            }
+            if ($nextStatus === 'Cancelled' && !empty($order['inventoryReserved'])) {
+                // Return stock only for orders created after inventory tracking
+                // was enabled. Older orders never reserved stock at checkout.
+                foreach (($order['items'] ?? []) as $item) {
+                    $productId = (string)($item['id'] ?? '');
+                    $quantity = max(0, (int)($item['quantity'] ?? 0));
+                    if ($productId !== '' && $quantity > 0) {
+                        $store['inventory'][$productId] = min(5000, shop_stock($store, $productId) + $quantity);
+                    }
+                }
+                $order['inventoryReserved'] = false;
+            }
+            $order['status'] = $nextStatus;
+            if ($nextStatus === 'Confirmed' && str_contains(strtolower((string)($order['paymentMethod'] ?? '')), 'gcash')) {
+                $order['paymentStatus'] = 'Payment confirmed manually';
+            }
+            if (!isset($order['statusHistory']) || !is_array($order['statusHistory'])) {
+                $order['statusHistory'] = [['status' => $currentStatus, 'at' => $order['createdAt'] ?? date(DATE_ATOM), 'note' => 'Order placed']];
+            }
+            $order['statusHistory'][] = [
+                'status' => $nextStatus,
+                'at' => date(DATE_ATOM),
+                'note' => 'Updated by shop staff',
+                'updatedBy' => 'Shop team',
+            ];
+            $order['updatedAt'] = date(DATE_ATOM);
+            return ['order' => $order];
+        }
+        return ['error' => 'That order could not be found.'];
+    });
+    if (isset($updated['error'])) {
+        fail($updated['error'], 409);
+    }
+    respond(['ok' => true, 'order' => $updated['order'], 'message' => 'Order status updated.']);
+}
+
+if ($action === 'admin_update_inventory') {
+    require_shop_admin($user);
+    $productId = trim((string)($input['productId'] ?? ''));
+    $quantity = filter_var($input['stock'] ?? null, FILTER_VALIDATE_INT);
+    $validProductIds = array_column(products(), 'id');
+    if (!in_array($productId, $validProductIds, true) || $quantity === false || $quantity < 0 || $quantity > 5000) {
+        fail('Choose a valid flower and a stock number between 0 and 5,000.');
+    }
+    store_update(function (&$store) use ($productId, $quantity) {
+        $store['inventory'][$productId] = $quantity;
+        return true;
+    });
+    $latest = store_read();
+    $product = null;
+    foreach (shop_products_for_store($latest) as $entry) {
+        if ($entry['id'] === $productId) {
+            $product = $entry;
+            break;
+        }
+    }
+    respond(['ok' => true, 'product' => $product, 'message' => 'Inventory updated.']);
+}
+
 if ($action === 'add_to_cart' || $action === 'update_cart' || $action === 'remove_from_cart') {
     $id = (string)($input['productId'] ?? '');
     $productExists = false;
@@ -620,17 +772,25 @@ if ($action === 'add_to_cart' || $action === 'update_cart' || $action === 'remov
         fail('That flower is no longer available.', 404);
     }
     $quantity = (int)($input['quantity'] ?? 1);
-    store_update(function (&$store) use ($userId, $id, $quantity, $action) {
+    $result = store_update(function (&$store) use ($userId, $id, $quantity, $action) {
         if (!isset($store['carts'][$userId])) {
             $store['carts'][$userId] = [];
         }
         if ($action === 'remove_from_cart' || $quantity <= 0) {
             unset($store['carts'][$userId][$id]);
-        } else {
-            $store['carts'][$userId][$id] = min(20, max(1, $action === 'add_to_cart' ? (int)($store['carts'][$userId][$id] ?? 0) + 1 : $quantity));
+            return ['ok' => true];
         }
-        return true;
+        $nextQuantity = min(20, max(1, $action === 'add_to_cart' ? (int)($store['carts'][$userId][$id] ?? 0) + 1 : $quantity));
+        $available = shop_stock($store, $id);
+        if ($nextQuantity > $available) {
+            return ['error' => $available < 1 ? 'This bouquet is currently sold out.' : 'Only ' . $available . ' of this bouquet are available.'];
+        }
+        $store['carts'][$userId][$id] = $nextQuantity;
+        return ['ok' => true];
     });
+    if (isset($result['error'])) {
+        fail($result['error'], 409);
+    }
     $store = store_read();
     respond(['ok' => true, 'cart' => cart_summary($store, $userId)]);
 }
@@ -701,20 +861,52 @@ if ($action === 'checkout') {
     $orderId = 'FB-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
     $paymentName = ['cod' => 'Cash on delivery', 'gcash' => 'GCash transfer (manual)', 'card' => 'Debit card at delivery'][$paymentMethod];
     $paymentStatus = ['cod' => 'Pay on delivery', 'gcash' => 'Payment not made', 'card' => 'Due at delivery'][$paymentMethod];
-    $result = store_update(function (&$store) use ($userId, $recipient, $address, $phone, $paymentMethod, $paymentName, $paymentStatus, $orderId, $snapshotSummary) {
+    $initialStatus = $paymentMethod === 'gcash' ? 'Awaiting manual payment' : 'Received';
+    $result = store_update(function (&$store) use ($userId, $recipient, $address, $phone, $paymentMethod, $paymentName, $paymentStatus, $orderId, $snapshotSummary, $initialStatus) {
         $summary = cart_summary($store, $userId);
         if (!$summary['items'] || $summary['total'] !== $snapshotSummary['total'] || $summary['count'] !== $snapshotSummary['count']) {
             return ['error' => 'Your cart changed while placing the order. Please review it and try again.'];
         }
-        $order = ['id' => $orderId, 'userId' => $userId, 'items' => $summary['items'], 'total' => $summary['total'], 'recipient' => $recipient, 'address' => $address, 'phone' => $phone, 'paymentMethod' => $paymentName, 'paymentStatus' => $paymentStatus, 'status' => $paymentMethod === 'gcash' ? 'Awaiting manual payment' : 'Received', 'createdAt' => date(DATE_ATOM)];
+        foreach ($summary['items'] as $item) {
+            $available = shop_stock($store, (string)$item['id']);
+            if ((int)$item['quantity'] > $available) {
+                return ['error' => 'Stock changed while checking out. Only ' . $available . ' of ' . $item['name'] . ' are available. Please review your cart.'];
+            }
+        }
+        $now = date(DATE_ATOM);
+        $order = [
+            'id' => $orderId,
+            'userId' => $userId,
+            'items' => $summary['items'],
+            'total' => $summary['total'],
+            'recipient' => $recipient,
+            'address' => $address,
+            'phone' => $phone,
+            'paymentMethod' => $paymentName,
+            'paymentStatus' => $paymentStatus,
+            'status' => $initialStatus,
+            'inventoryReserved' => true,
+            'statusHistory' => [['status' => $initialStatus, 'at' => $now, 'note' => 'Order placed']],
+            'createdAt' => $now,
+            'updatedAt' => $now,
+        ];
+        foreach ($summary['items'] as $item) {
+            $productId = (string)$item['id'];
+            $store['inventory'][$productId] = shop_stock($store, $productId) - (int)$item['quantity'];
+        }
         $store['orders'][] = $order;
         $store['carts'][$userId] = [];
         return ['order' => $order];
     });
     if (isset($result['error'])) {
-        fail($result['error']);
+        fail($result['error'], 409);
     }
-    respond(['ok' => true, 'order' => $result['order'], 'cart' => ['items' => [], 'total' => 0, 'count' => 0], 'message' => 'Your order and payment preference have been saved. No payment was taken.']);
+    respond([
+        'ok' => true,
+        'order' => $result['order'],
+        'cart' => ['items' => [], 'total' => 0, 'count' => 0],
+        'message' => 'Your order and payment preference have been saved. No payment was taken.',
+    ]);
 }
 
 fail('That shop action was not found.', 404);
