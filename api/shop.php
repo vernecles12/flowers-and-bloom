@@ -353,6 +353,12 @@ $rawBody = file_get_contents('php://input') ?: '';
 $input = json_decode($rawBody ?: '[]', true);
 $input = is_array($input) ? $input : [];
 
+// The product catalogue is public and does not depend on account storage.
+// This keeps flower cards available if the private account store is briefly unavailable.
+if ($action === 'catalog' && $method === 'GET') {
+    respond(['ok' => true, 'products' => products()]);
+}
+
 if ($action === 'state' && $method === 'GET') {
     $store = store_read();
     $user = current_user_from_store($store);
