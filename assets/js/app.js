@@ -101,30 +101,92 @@
         toastTimer = setTimeout(function () { toast.classList.remove("visible"); }, 2800);
     }
 
-    function floralNotice(title, message, confirmText) {
+    function floralAlert(options) {
+        var config = Object.assign({
+            title: "",
+            text: "",
+            icon: "success",
+            confirmButtonText: "Lovely",
+            showCancelButton: false,
+            cancelButtonText: "Not now",
+            iconColor: null
+        }, options || {});
+
         if (window.Swal && typeof window.Swal.fire === "function") {
             return window.Swal.fire({
-                title: title,
-                html: message,
-                icon: "success",
-                iconColor: "#ad7468",
-                confirmButtonText: confirmText || "Lovely",
+                title: config.title,
+                text: config.text,
+                icon: config.icon,
+                iconColor: config.iconColor || (config.icon === "error" ? "#c43d45" : "#3f9157"),
+                confirmButtonText: config.confirmButtonText,
+                showCancelButton: Boolean(config.showCancelButton),
+                cancelButtonText: config.cancelButtonText,
                 customClass: { popup: "floral-alert" },
-                buttonsStyling: false
+                buttonsStyling: false,
+                reverseButtons: true,
+                focusConfirm: true,
+                showClass: { popup: "floral-alert-show" },
+                hideClass: { popup: "floral-alert-hide" }
             });
         }
+
         return new Promise(function (resolve) {
             var layer = document.createElement("div");
             layer.className = "modal-backdrop floral-fallback-backdrop";
-            layer.innerHTML = '<section class="floral-fallback-card" role="dialog" aria-modal="true"><div>✿</div><h2></h2><p></p><button type="button"></button></section>';
-            layer.querySelector("h2").textContent = title;
-            layer.querySelector("p").textContent = message.replace(/<[^>]+>/g, "");
-            layer.querySelector("button").textContent = confirmText || "Lovely";
-            layer.addEventListener("click", function (event) {
-                if (event.target === layer || event.target.tagName === "BUTTON") { layer.remove(); resolve(); }
-            });
+            var symbol = config.icon === "error" ? "×" : (config.icon === "success" ? "✓" : "!");
+            var iconClass = config.icon === "error" ? "floral-fallback-icon floral-fallback-error" : "floral-fallback-icon floral-fallback-success";
+            layer.innerHTML = '<section class="floral-fallback-card" role="dialog" aria-modal="true"><div class="' + iconClass + '" aria-hidden="true"></div><h2></h2><p></p><div class="floral-fallback-actions"><button type="button" data-confirm></button></div></section>';
+            layer.querySelector(".floral-fallback-icon").textContent = symbol;
+            layer.querySelector("h2").textContent = config.title;
+            layer.querySelector("p").textContent = config.text;
+            layer.querySelector("[data-confirm]").textContent = config.confirmButtonText;
+            if (config.showCancelButton) {
+                var cancel = document.createElement("button");
+                cancel.type = "button";
+                cancel.className = "floral-fallback-cancel";
+                cancel.textContent = config.cancelButtonText;
+                cancel.setAttribute("data-cancel", "");
+                layer.querySelector(".floral-fallback-actions").appendChild(cancel);
+            }
+            function finish(confirmed) {
+                layer.remove();
+                resolve({ isConfirmed: confirmed, isDismissed: !confirmed });
+            }
+            layer.querySelector("[data-confirm]").addEventListener("click", function () { finish(true); });
+            var cancelButton = layer.querySelector("[data-cancel]");
+            if (cancelButton) cancelButton.addEventListener("click", function () { finish(false); });
+            layer.addEventListener("click", function (event) { if (event.target === layer) finish(false); });
             document.body.appendChild(layer);
+            layer.querySelector("[data-confirm]").focus();
         });
+    }
+
+    function floralNotice(title, message, confirmText) {
+        return floralAlert({
+            title: title,
+            text: message,
+            icon: "success",
+            iconColor: "#3f9157",
+            confirmButtonText: confirmText || "Lovely"
+        });
+    }
+
+    async function askToSignIn(message, productId) {
+        pendingProduct = productId || null;
+        var result = await floralAlert({
+            title: "Please sign in first",
+            text: message || "Sign in to continue with your flowers.",
+            icon: "error",
+            iconColor: "#c43d45",
+            confirmButtonText: "Sign in",
+            showCancelButton: true,
+            cancelButtonText: "Not now"
+        });
+        if (result && result.isConfirmed) {
+            openAuth("login");
+        } else {
+            pendingProduct = null;
+        }
     }
 
     function showWelcome(user, type) {
@@ -132,8 +194,8 @@
         var title = first ? "Welcome" : "Welcome back";
         var name = user && user.name ? user.name.split(/\s+/)[0] : "flower friend";
         var message = first
-            ? "Glad you found us, " + escapeHtml(name) + ". Have a look around."
-            : "Good to see you again, " + escapeHtml(name) + ". What can we help you find today?";
+            ? "Glad you found us, " + name + ". Have a look around."
+            : "Good to see you again, " + name + ". What can we help you find today?";
         floralNotice(title, message, "Have a look");
     }
 
@@ -315,21 +377,27 @@
 
     async function addProduct(productId) {
         if (!state.user) {
-            pendingProduct = productId;
-            openAuth("login");
+            await askToSignIn("Please sign in first to add this flower to your cart.", productId);
             return;
         }
         try {
             var result = await api("add_to_cart", { productId: productId });
             state.cart = result.cart;
             setHeader();
-            notify("Added to your cart.");
+            await floralNotice("Added to your cart", "Your flower has been added. You can keep browsing or view your cart.", "Lovely");
         } catch (error) {
             if (error.status === 401) {
                 state.user = null;
-                pendingProduct = productId;
-                openAuth("login");
-            } else { notify(error.message); }
+                await askToSignIn("Your session has expired. Please sign in first to add this flower to your cart.", productId);
+            } else {
+                await floralAlert({
+                    title: "We couldn't add that flower",
+                    text: error.message,
+                    icon: "error",
+                    iconColor: "#c43d45",
+                    confirmButtonText: "Close"
+                });
+            }
         }
     }
 
@@ -382,7 +450,10 @@
     });
 
     document.getElementById("cart-shortcut").addEventListener("click", function () {
-        if (!state.user) { openAuth("login"); notify("Sign in or create an account to add flowers to your cart."); return; }
+        if (!state.user) {
+            askToSignIn("Please sign in first to view your cart.");
+            return;
+        }
         showPage("cart");
     });
     document.getElementById("account-shortcut").addEventListener("click", function () {
@@ -476,8 +547,20 @@
     });
 
     document.getElementById("checkout-button").addEventListener("click", function () {
-        if (!state.user) { openAuth("login"); return; }
-        if (!state.cart.count) { notify("Your cart is empty."); return; }
+        if (!state.user) {
+            askToSignIn("Please sign in first to proceed to checkout.");
+            return;
+        }
+        if (!state.cart.count) {
+            floralAlert({
+                title: "Your cart is empty",
+                text: "Add a bouquet before proceeding to checkout.",
+                icon: "warning",
+                iconColor: "#b78037",
+                confirmButtonText: "Keep browsing"
+            });
+            return;
+        }
         openModal("checkout-modal");
     });
     document.getElementById("checkout-form").addEventListener("submit", async function (event) {
