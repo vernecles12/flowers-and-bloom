@@ -58,7 +58,7 @@
             <div><span class="promise-icon">↗</span><p><b>City delivery</b><small>Across Metro Manila</small></p></div>
         </section>
 
-        <section class="shop-section section-wrap hidden" id="shop">
+        <section class="shop-section section-wrap" id="shop">
             <div class="section-heading">
                 <div><span class="eyebrow eyebrow-light">Made fresh at the studio</span><h2>Find your <em>flowers.</em></h2></div>
                 <p>Have a look around. The right bunch<br>usually has a way of finding you.</p>
