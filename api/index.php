@@ -22,10 +22,12 @@
             <a href="#account-view" class="nav-link" id="profile-nav-link">Profile settings</a>
             <a href="#our-story" class="nav-link">The studio</a>
             <a href="#journal" class="nav-link">Flower notes</a>
+            <a href="#admin-view" class="nav-link hidden" id="admin-nav-link">Studio dashboard</a>
         </nav>
         <div class="header-actions">
             <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode"><span class="theme-icon" aria-hidden="true">☾</span><span class="theme-label">Dark</span></button>
             <button class="icon-button account-shortcut" id="account-shortcut" aria-label="Account settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.7-3.2 3.3-5 7-5s6.3 1.8 7 5"/></svg></button>
+            <button class="wishlist-shortcut" id="wishlist-shortcut" type="button" aria-label="Saved flowers, 0 items"><span aria-hidden="true">♡</span><b id="wishlist-count">0</b></button>
             <button class="cart-shortcut" id="cart-shortcut" aria-label="My Cart, 0 items"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.1 11.1a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 1.9-1.4L21 9H6"/><circle cx="9.5" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg><span>My Cart</span><b id="cart-count" aria-live="polite">0</b></button>
             <button class="header-login" id="header-login">Sign in</button>
         </div>
@@ -68,7 +70,11 @@
                     <button class="filter-chip" data-category="signature">Signature</button>
                     <button class="filter-chip" data-category="bright">Bright & happy</button>
                 </div>
-                <div class="shop-count" id="shop-count"></div>
+                <div class="shop-discovery-controls">
+                    <label class="shop-search"><span aria-hidden="true">⌕</span><input id="product-search" type="search" placeholder="Search flowers" aria-label="Search flowers"></label>
+                    <label class="shop-sort"><span>Sort</span><select id="product-sort" aria-label="Sort flower results"><option value="featured">Featured</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option><option value="name">Name: A to Z</option><option value="rating">Top rated</option></select></label>
+                    <div class="shop-count" id="shop-count"></div>
+                </div>
             </div>
             <div class="product-grid" id="product-grid" aria-live="polite"></div>
             <div class="pagination-row">
@@ -119,10 +125,28 @@
             <div class="cart-layout"><div id="cart-items" class="cart-items"></div><aside class="cart-summary"><span class="eyebrow eyebrow-light">Order summary</span><h3>Your total</h3><div class="summary-line"><span>Flowers</span><b id="summary-subtotal">₱0</b></div><div class="summary-line"><span>Delivery</span><span>At checkout</span></div><div class="summary-total"><span>Total</span><b id="summary-total">₱0</b></div><p>Add the recipient and address on the next screen.</p><button class="button button-dark button-full" id="checkout-button">Continue to checkout <span>→</span></button><small>Secure, account-protected checkout</small></aside></div>
         </section>
 
+        <section class="wishlist-section section-wrap hidden" id="wishlist-view">
+            <div class="section-heading">
+                <div><span class="eyebrow eyebrow-light">Your little collection</span><h2>Saved <em>flowers.</em></h2></div>
+                <p id="wishlist-count-label">Your favourite bouquets, ready when you are.</p>
+            </div>
+            <div class="product-grid wishlist-grid" id="wishlist-grid" aria-live="polite"></div>
+        </section>
+
         <section class="account-section section-wrap hidden" id="account-view">
             <div class="section-heading"><div><span class="eyebrow eyebrow-light">Your details and orders</span><h2>Profile <em>settings.</em></h2></div><button class="text-button" id="logout-button">Sign out <span>↗</span></button></div>
             <div class="account-layout"><div class="account-intro"><div class="account-avatar" id="account-avatar"><span id="account-avatar-initial">✿</span><img id="account-avatar-image" class="hidden" alt="Your profile photo"></div><label class="avatar-upload-button" for="profile-photo-input">Choose a profile photo</label><p class="avatar-hint">JPG, PNG, or WebP · stored privately on your account</p><p class="eyebrow eyebrow-light">Your account</p><h3 id="account-welcome">Hello there</h3><p>Update your name and password here. Your order history is below.</p><div id="account-order-count" class="account-order-count">No orders yet. Orders you place will appear here.</div></div><form class="account-form" id="profile-form"><h3>Your details</h3><input type="file" id="profile-photo-input" class="visually-hidden" accept="image/jpeg,image/png,image/webp"><button class="text-button remove-avatar-button" type="button" id="remove-profile-photo">Remove profile photo</button><label>Your name<input type="text" id="profile-name" name="name" required minlength="2"></label><label>Email address<input type="email" id="profile-email" name="email" readonly></label><div class="form-divider"></div><h3>A new password <small>(optional)</small></h3><p class="form-hint">Only fill these in if you’d like to change it.</p><label>Current password<input type="password" id="current-password" autocomplete="current-password"></label><label>New password<input type="password" id="new-password" autocomplete="new-password" minlength="8"></label><button class="button button-dark" type="submit">Save my details <span>→</span></button></form></div>
             <div class="order-history" id="order-history"></div>
+        </section>
+
+        <section class="admin-section section-wrap hidden" id="admin-view">
+            <div class="section-heading">
+                <div><span class="eyebrow eyebrow-light">Private staff area</span><h2>Studio <em>dashboard.</em></h2></div>
+                <p>Manage fulfilment and available bouquets.<br>Only authorised staff can open this page.</p>
+            </div>
+            <div id="admin-content" class="admin-content">
+                <p class="admin-empty">Loading your studio overview…</p>
+            </div>
         </section>
     </main>
 
