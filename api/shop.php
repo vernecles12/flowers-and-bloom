@@ -379,7 +379,7 @@ if ($action === 'newsletter_subscribe') {
     $added = save_newsletter_subscription($email);
     respond([
         'ok' => true,
-        'message' => $added ? 'You’re on the list. We’ll send the occasional studio note your way.' : 'You’re already on the list. We’ll be in touch when there’s something lovely to share.',
+        'message' => $added ? 'Youâ€™re on the list. Weâ€™ll send the occasional studio note your way.' : 'Youâ€™re already on the list. Weâ€™ll be in touch when thereâ€™s something lovely to share.',
     ]);
 }
 
@@ -419,14 +419,14 @@ if ($action === 'login') {
         foreach ($store['users'] as &$user) {
             if ($user['email'] === $email) {
                 if (!password_verify($password, $user['password'])) {
-                    return ['error' => 'That email and password don’t match.'];
+                    return ['error' => 'That email and password donâ€™t match.'];
                 }
                 $welcomeType = !empty($user['hasLoggedIn']) ? 'back' : 'first';
                 $user['hasLoggedIn'] = true;
                 return ['user' => $user, 'welcomeType' => $welcomeType];
             }
         }
-        return ['error' => 'That email and password don’t match.'];
+        return ['error' => 'That email and password donâ€™t match.'];
     });
     if (isset($result['error'])) {
         fail($result['error'], 401);
@@ -542,16 +542,16 @@ if ($action === 'update_profile') {
         fail('Your new password needs at least 8 characters.');
     }
     if ($profileImage !== null) {
-        if (!is_string($profileImage) || strlen($profileImage) > 400000 || !preg_match('#^data:image/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$#', $profileImage, $imageParts)) {
-            fail('Choose a JPG, PNG, or WebP image under 300 KB.');
+        if (!is_string($profileImage) || strlen($profileImage) > 850000 || !preg_match('#^data:image/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$#', $profileImage, $imageParts)) {
+            fail('Choose a JPG, PNG, or WebP image under 600 KB.');
         }
         if (!function_exists('getimagesizefromstring')) {
             fail('Photo uploads are not available on this server yet.', 503);
         }
         $imageBytes = base64_decode($imageParts[2], true);
         $imageInfo = $imageBytes !== false ? @getimagesizefromstring($imageBytes) : false;
-        if ($imageBytes === false || strlen($imageBytes) > 300000 || !$imageInfo || (int)$imageInfo[0] > 6000 || (int)$imageInfo[1] > 6000 || !in_array($imageInfo['mime'] ?? '', ['image/jpeg', 'image/png', 'image/webp'], true)) {
-            fail('That photo could not be read. Please choose a JPG, PNG, or WebP image under 300 KB.');
+        if ($imageBytes === false || strlen($imageBytes) > 600000 || !$imageInfo || (int)$imageInfo[0] > 6000 || (int)$imageInfo[1] > 6000 || !in_array($imageInfo['mime'] ?? '', ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            fail('That photo could not be read. Please choose a JPG, PNG, or WebP image under 600 KB.');
         }
     }
     $result = store_update(function (&$store) use ($userId, $name, $currentPassword, $newPassword, $profileImage, $removeProfileImage) {
@@ -612,3 +612,4 @@ if ($action === 'checkout') {
 }
 
 fail('That shop action was not found.', 404);
+
