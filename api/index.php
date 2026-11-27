@@ -127,7 +127,7 @@
     </main>
 
     <footer class="site-footer">
-        <div class="footer-top"><a class="brand footer-brand" href="#home"><span class="brand-mark">f<span>✿</span></span><span class="brand-name">flowers <em>&</em> bloom<small>FLORAL STUDIO · MANILA</small></span></a><p>Flowers, arranged by hand<br>in Metro Manila.</p><div class="footer-links"><a href="#shop">Shop flowers</a><a href="#our-story">The studio</a><button id="footer-account">My account</button><a href="/api/admin.php">Studio dashboard</a></div></div>
+        <div class="footer-top"><a class="brand footer-brand" href="#home"><span class="brand-mark">f<span>✿</span></span><span class="brand-name">flowers <em>&</em> bloom<small>FLORAL STUDIO · MANILA</small></span></a><p>Flowers, arranged by hand<br>in Metro Manila.</p><div class="footer-links"><a href="#shop">Shop flowers</a><a href="#our-story">The studio</a><button id="footer-account">My account</button></div></div>
         <div class="footer-bottom"><span>© <span id="year"></span> Flowers and Bloom. </span><span>Metro Manila · Philippines <b>✿</b></span></div>
     </footer>
 
