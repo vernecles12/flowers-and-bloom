@@ -43,3 +43,16 @@ Password reset codes are displayed on screen for this demo. The app also attempt
 - `storage/shop.json` - local users, carts, and orders (ignored by Git)
 
 Product names, descriptions, and prices live in `api/lib/catalog.php`. The site uses system font stacks and does not download fonts from Google.
+
+
+## Private Blob storage and account recovery
+
+The deployed shop intentionally keeps customer records, password hashes, carts, orders, newsletter subscriptions, and PHP sessions in a **private** Vercel Blob store. Do not make this store public. Public Blob access is for public media such as product photos; customer and session data must remain protected.
+
+For each Vercel project that serves this shop, confirm that `BLOB_STORE_ID` and `BLOB_READ_WRITE_TOKEN` identify the same private Blob store. The PHP REST client uses the configured read/write token first and can fall back to the request-scoped Vercel OIDC token when a project is configured for OIDC. Neither credential belongs in the browser or Git.
+
+If a private-session read fails, the API returns a temporary storage/session error rather than silently treating the failed read as a new empty session. If an old CSRF token is detected, the browser refreshes the session state once and retries the original request once. Registration signs the new customer in immediately; retrying the same email/password after a lost response restores that account session instead of creating a duplicate account. A different password for an existing email is directed to sign-in or password reset.
+
+## Deployment checks
+
+After updating the code, verify the production and preview Vercel projects use the intended private store. Do not delete or recreate the store to troubleshoot a 403: that could separate the website from its existing customer and order records.
