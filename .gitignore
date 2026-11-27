@@ -6,3 +6,5 @@
 
 .vercel
 .env*
+
+/storage/admin-emails.txt
