@@ -93,7 +93,7 @@ function shop_admin_dashboard_data(array $store): array
     $openOrders = 0;
     $deliveredOrders = 0;
     $cancelledOrders = 0;
-    $salesTotal = 0;
+    $orderValueTotal = 0;
     foreach ($orders as &$order) {
         $status = (string)($order['status'] ?? 'Received');
         if ($status === 'Delivered') {
@@ -104,7 +104,7 @@ function shop_admin_dashboard_data(array $store): array
             $openOrders++;
         }
         if ($status !== 'Cancelled') {
-            $salesTotal += (int)($order['total'] ?? 0);
+            $orderValueTotal += (int)($order['total'] ?? 0);
         }
         $customer = $usersById[$order['userId'] ?? ''] ?? [];
         $order['customerName'] = (string)($customer['name'] ?? 'Customer');
@@ -121,7 +121,7 @@ function shop_admin_dashboard_data(array $store): array
             'openOrders' => $openOrders,
             'deliveredOrders' => $deliveredOrders,
             'cancelledOrders' => $cancelledOrders,
-            'salesTotal' => $salesTotal,
+            'orderValueTotal' => $orderValueTotal,
             'lowStock' => $lowStock,
             'customers' => count($usersById),
         ],
