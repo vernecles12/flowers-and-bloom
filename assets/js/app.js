@@ -11,7 +11,7 @@
     var selectedProfileImage = null;
     var removeProfileImage = false;
     var toastTimer;
-    var homeSections = ["home", "shop", "our-story", "journal"];
+    var homeSections = ["home", "our-story", "journal"];
     var productGrid = document.getElementById("product-grid");
     var money = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 });
     var scriptBasePath = document.currentScript ? new URL("../../", document.currentScript.src).pathname : "/";
@@ -212,6 +212,30 @@
         floralNotice(title, message, "Have a look");
     }
 
+    function updateHomeAccess() {
+        var onHomePage = page === "home";
+        homeSections.forEach(function (id) {
+            document.getElementById(id).classList.toggle("hidden", !onHomePage);
+        });
+
+        var canViewMemberSections = Boolean(state.user) && onHomePage;
+        document.getElementById("shop").classList.toggle("hidden", !canViewMemberSections);
+        document.getElementById("studio-letters").classList.toggle("hidden", !canViewMemberSections);
+
+        // Disable every link to the protected Shop section while signed out.
+        document.querySelectorAll('a[href="#shop"]').forEach(function (link) {
+            var disabled = !state.user;
+            link.classList.toggle("shop-link-disabled", disabled);
+            if (disabled) {
+                link.setAttribute("aria-disabled", "true");
+                link.tabIndex = -1;
+            } else {
+                link.removeAttribute("aria-disabled");
+                link.removeAttribute("tabindex");
+            }
+        });
+    }
+
     function setHeader() {
         var login = document.getElementById("header-login");
         login.textContent = state.user ? "My account" : "Sign in";
@@ -222,6 +246,7 @@
         document.getElementById("wishlist-count").textContent = savedCount;
         document.getElementById("wishlist-shortcut").setAttribute("aria-label", "Saved flowers, " + savedCount + (savedCount === 1 ? " item" : " items"));
         document.getElementById("admin-nav-link").classList.toggle("hidden", !(state.user && state.user.isAdmin));
+        updateHomeAccess();
     }
 
     function productCardMarkup(product, index) {
@@ -445,7 +470,7 @@
             return;
         }
         page = nextPage;
-        homeSections.forEach(function (id) { document.getElementById(id).classList.toggle("hidden", nextPage !== "home"); });
+        updateHomeAccess();
         document.getElementById("cart-view").classList.toggle("hidden", nextPage !== "cart");
         document.getElementById("account-view").classList.toggle("hidden", nextPage !== "account");
         document.getElementById("wishlist-view").classList.toggle("hidden", nextPage !== "wishlist");
@@ -681,8 +706,12 @@
         } catch (error) { notify(error.message); }
     });
     document.querySelectorAll(".nav-link").forEach(function (link) {
-        link.addEventListener("click", function () {
+        link.addEventListener("click", function (event) {
             var href = link.getAttribute("href");
+            if (href === "#shop" && !state.user) {
+                event.preventDefault();
+                return;
+            }
             if (href === "#account-view") {
                 if (state.user) showPage("account");
                 else openAuth("login");
