@@ -26,6 +26,10 @@ function blob_credentials(): array
     if ($token === '' || $storeId === '') {
         throw new RuntimeException('Blob credentials are missing.');
     }
+    // Vercel's Blob CDN hostname and store-id header use the bare identifier.
+    if (str_starts_with($storeId, 'store_')) {
+        $storeId = substr($storeId, 6);
+    }
     return [$token, $storeId];
 }
 
