@@ -121,10 +121,10 @@ h1, h2, h3, p { margin-top: 0; }
 .story-section { display: grid; grid-template-columns: 1fr 1fr; min-height: 550px; background: #eae8dd; scroll-margin-top: 77px; }
 .story-image-wrap { position: relative; min-height: 530px; overflow: hidden; background: #d2cfc0; }
 .story-image { position: absolute; inset: 0; background: linear-gradient(0deg,rgba(28,46,34,.12),rgba(28,46,34,.01)), url("../images/studio-bouquet.jpg") center 52% / cover no-repeat; }
-.story-stamp { position: absolute; right: 28px; bottom: 27px; width: 124px; height: 124px; border-radius: 50%; background: #f7f2e7; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--ink); transform: rotate(-7deg); }
+.story-stamp { position: absolute; right: 28px; bottom: 27px; width: 124px; height: 124px; border: 1px solid rgba(38,60,49,.16); border-radius: 50%; background: #f7f2e7; box-shadow: 0 8px 24px rgba(10,28,19,.16); display: flex; flex-direction: column; justify-content: center; align-items: center; color: #263c31; transform: rotate(-7deg); }
 .story-stamp span { font-size: 20px; line-height: 1.2; color: #b76f68; }
-.story-stamp b { font-family: var(--serif); text-align: center; font-size: 13px; font-weight: 500; line-height: 1.18; letter-spacing: .035em; }
-.story-stamp small { font-size: 6px; letter-spacing: .14em; margin-top: 5px; }
+.story-stamp b { color: #263c31; font-family: var(--serif); text-align: center; font-size: 14px; font-weight: 600; line-height: 1.18; letter-spacing: .035em; }
+.story-stamp small { color: #586b5d; font-family: var(--sans); font-size: 7px; font-weight: 700; letter-spacing: .11em; margin-top: 6px; }
 .story-copy { padding: 88px clamp(50px,9vw,140px) 60px clamp(48px,7.3vw,112px); align-self: center; }
 .story-copy h2 { font-size: clamp(42px,5vw,62px); margin-bottom: 24px; }
 .story-copy p { color: #687066; max-width: 420px; font-size: 11px; line-height: 1.95; margin-bottom: 13px; }
