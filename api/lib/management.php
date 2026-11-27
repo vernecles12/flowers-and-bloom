@@ -54,8 +54,21 @@ function shop_stock(array $store, string $productId): int
 
 function shop_products_for_store(array $store): array
 {
+    $catalogue = products();
+    $knownIds = array_fill_keys(array_column($catalogue, 'id'), true);
+    foreach (($store['customProducts'] ?? []) as $customProduct) {
+        if (!is_array($customProduct) || !is_string($customProduct['id'] ?? null) || !preg_match('/^[a-z0-9-]{1,64}$/', $customProduct['id']) || isset($knownIds[$customProduct['id']])) {
+            continue;
+        }
+        $customProduct['reviews'] = is_array($customProduct['reviews'] ?? null) ? $customProduct['reviews'] : [];
+        $customProduct['rating'] = 0;
+        $customProduct['reviewCount'] = 0;
+        $catalogue[] = $customProduct;
+        $knownIds[$customProduct['id']] = true;
+    }
+
     $result = [];
-    foreach (products() as $product) {
+    foreach ($catalogue as $product) {
         $stock = shop_stock($store, (string)$product['id']);
         $product['stock'] = $stock;
         $product['available'] = $stock > 0;
@@ -67,7 +80,7 @@ function shop_products_for_store(array $store): array
 
 function shop_favorites(array $store, string $userId): array
 {
-    $valid = array_column(products(), 'id');
+    $valid = array_column(shop_products_for_store($store), 'id');
     $saved = $store['wishlists'][$userId] ?? [];
     if (!is_array($saved)) {
         return [];
@@ -94,6 +107,8 @@ function shop_admin_dashboard_data(array $store): array
     $deliveredOrders = 0;
     $cancelledOrders = 0;
     $orderValueTotal = 0;
+    $revenueTotal = 0;
+    $openOrderValue = 0;
     foreach ($orders as &$order) {
         $status = (string)($order['status'] ?? 'Received');
         if ($status === 'Delivered') {
@@ -106,6 +121,11 @@ function shop_admin_dashboard_data(array $store): array
         if ($status !== 'Cancelled') {
             $orderValueTotal += (int)($order['total'] ?? 0);
         }
+        if ($status === 'Delivered') {
+            $revenueTotal += (int)($order['total'] ?? 0);
+        } elseif ($status !== 'Cancelled') {
+            $openOrderValue += (int)($order['total'] ?? 0);
+        }
         $customer = $usersById[$order['userId'] ?? ''] ?? [];
         $order['customerName'] = (string)($customer['name'] ?? 'Customer');
         $order['customerEmail'] = (string)($customer['email'] ?? '');
@@ -114,6 +134,8 @@ function shop_admin_dashboard_data(array $store): array
 
     $products = shop_products_for_store($store);
     $lowStock = count(array_filter($products, static fn(array $product): bool => $product['stock'] <= 3));
+    $totalStockUnits = array_sum(array_column($products, 'stock'));
+    $soldOutProducts = count(array_filter($products, static fn(array $product): bool => $product['stock'] === 0));
 
     return [
         'summary' => [
@@ -122,7 +144,11 @@ function shop_admin_dashboard_data(array $store): array
             'deliveredOrders' => $deliveredOrders,
             'cancelledOrders' => $cancelledOrders,
             'orderValueTotal' => $orderValueTotal,
+            'revenueTotal' => $revenueTotal,
+            'openOrderValue' => $openOrderValue,
             'lowStock' => $lowStock,
+            'totalStockUnits' => $totalStockUnits,
+            'soldOutProducts' => $soldOutProducts,
             'customers' => count($usersById),
         ],
         'orders' => array_slice($orders, 0, 100),
