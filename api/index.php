@@ -131,6 +131,18 @@
         <div class="footer-bottom"><span>© <span id="year"></span> Flowers and Bloom. </span><span>Metro Manila · Philippines <b>✿</b></span></div>
     </footer>
 
+    <div class="modal-backdrop hidden" id="reviews-modal" aria-hidden="true">
+        <section class="reviews-modal" role="dialog" aria-modal="true" aria-labelledby="reviews-title">
+            <button class="modal-close" data-close-reviews aria-label="Close flower details">×</button>
+            <div class="modal-flower" aria-hidden="true">✿</div>
+            <span class="eyebrow eyebrow-light">A closer look</span>
+            <h2 id="reviews-title"></h2>
+            <div class="reviews-overview" id="reviews-overview"></div>
+            <div class="sample-review-note">Sample reviews for this website demo. These are not verified customer purchases.</div>
+            <div class="product-review-list" id="product-review-list"></div>
+        </section>
+    </div>
+
     <div class="modal-backdrop hidden" id="auth-modal" aria-hidden="true">
         <section class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
             <button class="modal-close" data-close-modal aria-label="Close">×</button>
