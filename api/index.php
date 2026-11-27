@@ -1,4 +1,3 @@
-
 <?php
 header('Content-Type: text/html; charset=UTF-8');
 ?>
@@ -13,10 +12,10 @@ header('Content-Type: text/html; charset=UTF-8');
     <link rel="stylesheet" href="assets/css/styles.css?v=admin-dashboard-20261128-v1">
 </head>
 <body>
-    <div class="announcement">Fresh bunches, delivered around Metro Manila <span>âœ¿</span></div>
+    <div class="announcement">Fresh bunches, delivered around Metro Manila <span>&#10047;</span></div>
     <header class="site-header">
         <a class="brand" href="#home" aria-label="Flowers and Bloom home">
-            <span class="brand-mark">f<span>âœ¿</span></span>
+            <span class="brand-mark">f<span>&#10047;</span></span>
             <span class="brand-name">flowers <em>&</em> bloom<small>FLORAL STUDIO Â· MANILA</small></span>
         </a>
         <button class="mobile-menu-button" id="mobile-menu-button" aria-label="Open menu" aria-expanded="false"><span></span><span></span></button>
@@ -29,9 +28,9 @@ header('Content-Type: text/html; charset=UTF-8');
             <a href="#admin-view" class="nav-link hidden" id="admin-nav-link">Studio dashboard</a>
         </nav>
         <div class="header-actions">
-            <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode"><span class="theme-icon" aria-hidden="true">â˜¾</span><span class="theme-label">Dark</span></button>
+            <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode"><span class="theme-icon" aria-hidden="true">&#9788;</span><span class="theme-label">Dark</span></button>
             <button class="icon-button account-shortcut" id="account-shortcut" aria-label="Account settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.7-3.2 3.3-5 7-5s6.3 1.8 7 5"/></svg></button>
-            <button class="wishlist-shortcut" id="wishlist-shortcut" type="button" aria-label="Saved flowers, 0 items"><span aria-hidden="true">â™¡</span><b id="wishlist-count">0</b></button>
+            <button class="wishlist-shortcut" id="wishlist-shortcut" type="button" aria-label="Saved flowers, 0 items"><span aria-hidden="true">&#9825;</span><b id="wishlist-count">0</b></button>
             <button class="cart-shortcut" id="cart-shortcut" aria-label="My Cart, 0 items"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.1 11.1a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 1.9-1.4L21 9H6"/><circle cx="9.5" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg><span>My Cart</span><b id="cart-count" aria-live="polite">0</b></button>
             <button class="header-login" id="header-login">Sign in</button>
         </div>
@@ -57,7 +56,7 @@ header('Content-Type: text/html; charset=UTF-8');
         <section class="promise-strip" aria-label="Our promises">
             <div><span class="promise-icon">âœ½</span><p><b>Seasonal flowers</b><small>Picked fresh each week</small></p></div>
             <i></i>
-            <div><span class="promise-icon">â™¡</span><p><b>Arranged by hand</b><small>Made at our Manila studio</small></p></div>
+            <div><span class="promise-icon">&#9825;</span><p><b>Arranged by hand</b><small>Made at our Manila studio</small></p></div>
             <i></i>
             <div><span class="promise-icon">â†—</span><p><b>City delivery</b><small>Across Metro Manila</small></p></div>
         </section>
@@ -84,14 +83,14 @@ header('Content-Type: text/html; charset=UTF-8');
             <div class="pagination-row">
                 <span id="page-label">01 â€” 04</span>
                 <div class="pagination-controls"><button id="page-prev" aria-label="Previous products" disabled>â†</button><span id="page-number">01 / 03</span><button id="page-next" aria-label="Next products">â†’</button></div>
-                <span class="pagination-note">A fresh page of petals <b>âœ¿</b></span>
+                <span class="pagination-note">A fresh page of petals <b>&#10047;</b></span>
             </div>
         </section>
 
         <section class="story-section" id="our-story">
             <div class="story-image-wrap">
                 <div class="story-image"></div>
-                <div class="story-stamp" style="color:#263c31 !important; opacity:1;"><span>âœ¿</span><b style="color:#263c31 !important; -webkit-text-fill-color:#263c31 !important; opacity:1;">GATHERED<br>WITH LOVE</b><small style="color:#586b5d !important; -webkit-text-fill-color:#586b5d !important; opacity:1;">EVERY SINGLE TIME</small></div>
+                <div class="story-stamp" style="color:#263c31 !important; opacity:1;"><span>&#10047;</span><b style="color:#263c31 !important; -webkit-text-fill-color:#263c31 !important; opacity:1;">GATHERED<br>WITH LOVE</b><small style="color:#586b5d !important; -webkit-text-fill-color:#586b5d !important; opacity:1;">EVERY SINGLE TIME</small></div>
             </div>
             <div class="story-copy">
                 <span class="eyebrow eyebrow-light">A small studio with a big heart</span>
@@ -99,7 +98,7 @@ header('Content-Type: text/html; charset=UTF-8');
                 <p>We started Flowers and Bloom because a bunch of flowers can say the thing you meant to say all along. It can make a kitchen feel like home, or let a friend know you havenâ€™t forgotten about them.</p>
                 <p>We buy what looks good that week, then make each order by hand here in Manila. No two bunches are exactly alike, and thatâ€™s part of the fun.</p>
                 <a href="#journal" class="text-link">A few notes from us <span>â†—</span></a>
-                <div class="signature">See you at the flower table, <em>the Flowers and Bloom team</em><span>âœ¿</span></div>
+                <div class="signature">See you at the flower table, <em>the Flowers and Bloom team</em><span>&#10047;</span></div>
             </div>
         </section>
 
@@ -114,7 +113,7 @@ header('Content-Type: text/html; charset=UTF-8');
         </section>
 
         <section class="newsletter-section hidden" id="studio-letters">
-            <div class="newsletter-flower">âœ¿</div>
+            <div class="newsletter-flower">&#10047;</div>
             <span class="eyebrow">Studio letters</span>
             <h2>Flowers, and a little <em>good news.</em></h2>
             <p>A note now and then about whatâ€™s in season, how to care for your flowers, and what weâ€™re making at the studio. Add your email to join; weâ€™ll confirm it here, so you can stay on this page.</p>
@@ -139,7 +138,7 @@ header('Content-Type: text/html; charset=UTF-8');
 
         <section class="account-section section-wrap hidden" id="account-view">
             <div class="section-heading"><div><span class="eyebrow eyebrow-light">Your details and orders</span><h2>Profile <em>settings.</em></h2></div><button class="text-button" id="logout-button">Sign out <span>â†—</span></button></div>
-            <div class="account-layout"><div class="account-intro"><div class="account-avatar" id="account-avatar"><span id="account-avatar-initial">âœ¿</span><img id="account-avatar-image" class="hidden" alt="Your profile photo"></div><label class="avatar-upload-button" for="profile-photo-input">Choose a profile photo</label><p class="avatar-hint">JPG, PNG, or WebP Â· stored privately on your account</p><p class="eyebrow eyebrow-light">Your account</p><h3 id="account-welcome">Hello there</h3><p>Update your name and password here. Your order history is below.</p><div id="account-order-count" class="account-order-count">No orders yet. Orders you place will appear here.</div></div><form class="account-form" id="profile-form"><h3>Your details</h3><input type="file" id="profile-photo-input" class="visually-hidden" accept="image/jpeg,image/png,image/webp"><button class="text-button remove-avatar-button" type="button" id="remove-profile-photo">Remove profile photo</button><label>Your name<input type="text" id="profile-name" name="name" required minlength="2"></label><label>Email address<input type="email" id="profile-email" name="email" readonly></label><div class="form-divider"></div><h3>A new password <small>(optional)</small></h3><p class="form-hint">Only fill these in if youâ€™d like to change it.</p><label>Current password<input type="password" id="current-password" autocomplete="current-password"></label><label>New password<input type="password" id="new-password" autocomplete="new-password" minlength="8"></label><button class="button button-dark" type="submit">Save my details <span>â†’</span></button></form></div>
+            <div class="account-layout"><div class="account-intro"><div class="account-avatar" id="account-avatar"><span id="account-avatar-initial">&#10047;</span><img id="account-avatar-image" class="hidden" alt="Your profile photo"></div><label class="avatar-upload-button" for="profile-photo-input">Choose a profile photo</label><p class="avatar-hint">JPG, PNG, or WebP Â· stored privately on your account</p><p class="eyebrow eyebrow-light">Your account</p><h3 id="account-welcome">Hello there</h3><p>Update your name and password here. Your order history is below.</p><div id="account-order-count" class="account-order-count">No orders yet. Orders you place will appear here.</div></div><form class="account-form" id="profile-form"><h3>Your details</h3><input type="file" id="profile-photo-input" class="visually-hidden" accept="image/jpeg,image/png,image/webp"><button class="text-button remove-avatar-button" type="button" id="remove-profile-photo">Remove profile photo</button><label>Your name<input type="text" id="profile-name" name="name" required minlength="2"></label><label>Email address<input type="email" id="profile-email" name="email" readonly></label><div class="form-divider"></div><h3>A new password <small>(optional)</small></h3><p class="form-hint">Only fill these in if youâ€™d like to change it.</p><label>Current password<input type="password" id="current-password" autocomplete="current-password"></label><label>New password<input type="password" id="new-password" autocomplete="new-password" minlength="8"></label><button class="button button-dark" type="submit">Save my details <span>â†’</span></button></form></div>
             <div class="order-history" id="order-history"></div>
         </section>
 
@@ -155,14 +154,14 @@ header('Content-Type: text/html; charset=UTF-8');
     </main>
 
     <footer class="site-footer">
-        <div class="footer-top"><a class="brand footer-brand" href="#home"><span class="brand-mark">f<span>âœ¿</span></span><span class="brand-name">flowers <em>&</em> bloom<small>FLORAL STUDIO Â· MANILA</small></span></a><p>Flowers, arranged by hand<br>in Metro Manila.</p><div class="footer-links"><a href="#shop">Shop flowers</a><a href="#our-story">The studio</a><button id="footer-account">My account</button></div></div>
-        <div class="footer-bottom"><span>Â© <span id="year"></span> Flowers and Bloom. </span><span>Metro Manila Â· Philippines <b>âœ¿</b></span></div>
+        <div class="footer-top"><a class="brand footer-brand" href="#home"><span class="brand-mark">f<span>&#10047;</span></span><span class="brand-name">flowers <em>&</em> bloom<small>FLORAL STUDIO Â· MANILA</small></span></a><p>Flowers, arranged by hand<br>in Metro Manila.</p><div class="footer-links"><a href="#shop">Shop flowers</a><a href="#our-story">The studio</a><button id="footer-account">My account</button></div></div>
+        <div class="footer-bottom"><span>Â© <span id="year"></span> Flowers and Bloom. </span><span>Metro Manila Â· Philippines <b>&#10047;</b></span></div>
     </footer>
 
     <div class="modal-backdrop hidden" id="reviews-modal" aria-hidden="true">
         <section class="reviews-modal" role="dialog" aria-modal="true" aria-labelledby="reviews-title">
             <button class="modal-close" data-close-reviews aria-label="Close flower details">Ã—</button>
-            <div class="modal-flower" aria-hidden="true">âœ¿</div>
+            <div class="modal-flower" aria-hidden="true">&#10047;</div>
             <span class="eyebrow eyebrow-light">A closer look</span>
             <h2 id="reviews-title"></h2>
             <div class="reviews-overview" id="reviews-overview"></div>
@@ -174,7 +173,7 @@ header('Content-Type: text/html; charset=UTF-8');
     <div class="modal-backdrop hidden" id="auth-modal" aria-hidden="true">
         <section class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
             <button class="modal-close" data-close-modal aria-label="Close">Ã—</button>
-            <div class="modal-flower">âœ¿</div><span class="eyebrow eyebrow-light" id="auth-eyebrow">Your account</span><h2 id="auth-title">Sign in to <em>continue.</em></h2><p class="auth-subtitle" id="auth-subtitle">Sign in to see your orders and manage your details.</p>
+            <div class="modal-flower">&#10047;</div><span class="eyebrow eyebrow-light" id="auth-eyebrow">Your account</span><h2 id="auth-title">Sign in to <em>continue.</em></h2><p class="auth-subtitle" id="auth-subtitle">Sign in to see your orders and manage your details.</p>
             <div class="auth-tabs"><button class="auth-tab active" data-auth-tab="login">Sign in</button><button class="auth-tab" data-auth-tab="register">Create an account</button></div>
             <form id="login-form" class="auth-form"><label>Email address<input type="email" name="email" placeholder="you@example.com" required autocomplete="email"></label><label>Password<input type="password" name="password" placeholder="At least 8 characters" required autocomplete="current-password"></label><button type="button" class="forgot-link" id="forgot-link">Forgot your password?</button><button class="button button-dark button-full" type="submit">Sign in <span>â†’</span></button></form>
             <form id="register-form" class="auth-form hidden"><label>Your name<input type="text" name="name" placeholder="What should we call you?" required minlength="2" autocomplete="name"></label><label>Email address<input type="email" name="email" placeholder="you@example.com" required autocomplete="email"></label><label>Password<input type="password" name="password" placeholder="At least 8 characters" required minlength="8" autocomplete="new-password"></label><button class="button button-dark button-full" type="submit">Create my account <span>â†’</span></button></form>
