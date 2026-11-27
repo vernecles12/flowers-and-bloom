@@ -441,6 +441,17 @@ if ($action === 'state' && $method === 'GET') {
     }
     $cart = $user ? cart_summary($store, $user['id']) : ['items' => [], 'total' => 0, 'count' => 0];
     $orders = $user ? array_values(array_filter($store['orders'], fn($order) => $order['userId'] === $user['id'])) : [];
+    foreach ($orders as &$customerOrder) {
+        if (isset($customerOrder['statusHistory']) && is_array($customerOrder['statusHistory'])) {
+            foreach ($customerOrder['statusHistory'] as &$historyEntry) {
+                if (isset($historyEntry['updatedBy'])) {
+                    $historyEntry['updatedBy'] = 'Shop team';
+                }
+            }
+            unset($historyEntry);
+        }
+    }
+    unset($customerOrder);
     respond([
         'ok' => true,
         'csrf' => $_SESSION['csrf'],
@@ -689,9 +700,9 @@ if ($action === 'admin_update_order_status') {
             if (!in_array($nextStatus, $transitions[$currentStatus] ?? [], true)) {
                 return ['error' => 'That status change is not allowed from the current order stage.'];
             }
-            if ($nextStatus === 'Cancelled') {
-                // Return reserved units exactly once. Cancelled is a final state,
-                // so this transition cannot be repeated to restock the order twice.
+            if ($nextStatus === 'Cancelled' && !empty($order['inventoryReserved'])) {
+                // Return stock only for orders created after inventory tracking
+                // was enabled. Older orders never reserved stock at checkout.
                 foreach (($order['items'] ?? []) as $item) {
                     $productId = (string)($item['id'] ?? '');
                     $quantity = max(0, (int)($item['quantity'] ?? 0));
@@ -699,6 +710,7 @@ if ($action === 'admin_update_order_status') {
                         $store['inventory'][$productId] = min(5000, shop_stock($store, $productId) + $quantity);
                     }
                 }
+                $order['inventoryReserved'] = false;
             }
             $order['status'] = $nextStatus;
             if ($nextStatus === 'Confirmed' && str_contains(strtolower((string)($order['paymentMethod'] ?? '')), 'gcash')) {
@@ -873,6 +885,7 @@ if ($action === 'checkout') {
             'paymentMethod' => $paymentName,
             'paymentStatus' => $paymentStatus,
             'status' => $initialStatus,
+            'inventoryReserved' => true,
             'statusHistory' => [['status' => $initialStatus, 'at' => $now, 'note' => 'Order placed']],
             'createdAt' => $now,
             'updatedAt' => $now,
