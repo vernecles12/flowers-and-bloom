@@ -11,7 +11,7 @@
     var selectedProfileImage = null;
     var removeProfileImage = false;
     var toastTimer;
-    var homeSections = ["home", "our-story", "journal"];
+    var homeSections = ["home", "shop", "our-story", "journal"];
     var productGrid = document.getElementById("product-grid");
     var money = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 });
     var scriptBasePath = document.currentScript ? new URL("../../", document.currentScript.src).pathname : "/";
@@ -218,22 +218,10 @@
             document.getElementById(id).classList.toggle("hidden", !onHomePage);
         });
 
-        var canViewMemberSections = Boolean(state.user) && onHomePage;
-        document.getElementById("shop").classList.toggle("hidden", !canViewMemberSections);
-        document.getElementById("studio-letters").classList.toggle("hidden", !canViewMemberSections);
-
-        // Disable every link to the protected Shop section while signed out.
-        document.querySelectorAll('a[href="#shop"]').forEach(function (link) {
-            var disabled = !state.user;
-            link.classList.toggle("shop-link-disabled", disabled);
-            if (disabled) {
-                link.setAttribute("aria-disabled", "true");
-                link.tabIndex = -1;
-            } else {
-                link.removeAttribute("aria-disabled");
-                link.removeAttribute("tabindex");
-            }
-        });
+        // Flower browsing is public. The Studio Letters sign-up section remains
+        // available only after the visitor has registered or signed in.
+        var canViewStudioLetters = Boolean(state.user) && onHomePage;
+        document.getElementById("studio-letters").classList.toggle("hidden", !canViewStudioLetters);
     }
 
     function setHeader() {
@@ -709,10 +697,6 @@
     document.querySelectorAll(".nav-link").forEach(function (link) {
         link.addEventListener("click", function (event) {
             var href = link.getAttribute("href");
-            if (href === "#shop" && !state.user) {
-                event.preventDefault();
-                return;
-            }
             if (href === "#account-view") {
                 if (state.user) showPage("account");
                 else openAuth("login");
