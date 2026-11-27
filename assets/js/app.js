@@ -285,6 +285,9 @@
     }
 
     async function refreshState() {
+        var catalogue = await api("catalog");
+        state.products = catalogue.products || [];
+        renderProducts();
         var result = await api("state");
         state.csrf = result.csrf;
         state.user = result.user;
@@ -524,7 +527,9 @@
 
     refreshState().catch(function (error) {
         notify(error.message);
-        productGrid.innerHTML = '<div class="empty-products">We’re arranging the flower table. Please refresh in a moment.</div>';
+        if (!state.products.length) {
+            productGrid.innerHTML = '<div class="empty-products">We’re arranging the flower table. Please refresh in a moment.</div>';
+        }
     });
 }());
 
