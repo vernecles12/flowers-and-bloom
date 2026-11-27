@@ -406,7 +406,7 @@
             ["Orders", summary.orders || 0],
             ["Open orders", summary.openOrders || 0],
             ["Delivered", summary.deliveredOrders || 0],
-            ["Sales recorded", money.format(summary.salesTotal || 0)],
+            ["Order value", money.format(summary.orderValueTotal || 0)],
             ["Low-stock flowers", summary.lowStock || 0],
             ["Customers", summary.customers || 0]
         ];
