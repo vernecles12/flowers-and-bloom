@@ -11,7 +11,7 @@
     var selectedProfileImage = null;
     var removeProfileImage = false;
     var toastTimer;
-    var homeSections = ["home", "shop", "our-story", "journal"];
+    var homeSections = ["home", "our-story", "journal"];
     var productGrid = document.getElementById("product-grid");
     var money = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 });
     var scriptBasePath = document.currentScript ? new URL("../../", document.currentScript.src).pathname : "/";
@@ -218,7 +218,11 @@
             document.getElementById(id).classList.toggle("hidden", !onHomePage);
         });
 
-        // The flower catalogue is public. Keep Studio Letters account-gated.
+        // Shop is its own public view: it stays hidden on the landing page
+        // and appears only after a visitor selects Shop or Browse the Flowers.
+        document.getElementById("shop").classList.toggle("hidden", page !== "shop");
+
+        // Studio Letters remains account-gated and only appears on the home view.
         var canViewStudioLetters = Boolean(state.user) && onHomePage;
         document.getElementById("studio-letters").classList.toggle("hidden", !canViewStudioLetters);
     }
@@ -648,8 +652,7 @@
             return;
         }
         if (event.target.closest("[data-go-shop]")) {
-            showPage("home");
-            document.getElementById("shop").scrollIntoView({ behavior: "smooth" });
+            showPage("shop");
         }
     });
 
@@ -698,8 +701,7 @@
             var href = link.getAttribute("href");
             if (href === "#shop") {
                 event.preventDefault();
-                showPage("home");
-                document.getElementById("shop").scrollIntoView({ behavior: "smooth" });
+                showPage("shop");
             } else if (href === "#account-view") {
                 if (state.user) showPage("account");
                 else openAuth("login");
@@ -714,12 +716,11 @@
         });
     });
 
-    // The hero Browse button, scroll cue and footer Shop links are public.
+    // The hero Browse button, scroll cue and footer Shop links open the dedicated Shop view.
     document.querySelectorAll('a[href="#shop"]:not(.nav-link)').forEach(function (link) {
         link.addEventListener("click", function (event) {
             event.preventDefault();
-            showPage("home");
-            document.getElementById("shop").scrollIntoView({ behavior: "smooth" });
+            showPage("shop");
         });
     });
 
