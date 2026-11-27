@@ -23,7 +23,7 @@
         var toggle = document.getElementById("theme-toggle");
         toggle.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
         toggle.title = dark ? "Switch to light mode" : "Switch to dark mode";
-        toggle.querySelector(".theme-icon").textContent = dark ? "â˜€" : "â˜¾";
+        toggle.querySelector(".theme-icon").textContent = dark ? "☀" : "☾";
         toggle.querySelector(".theme-label").textContent = dark ? "Light" : "Dark";
         try { localStorage.setItem("flowers-and-bloom-theme", dark ? "dark" : "light"); } catch (error) { /* Storage can be disabled; theme still works for this visit. */ }
     }
@@ -48,12 +48,12 @@
         try {
             response = await fetch(apiEndpoint + "?action=" + encodeURIComponent(action), options);
         } catch (error) {
-            throw new Error("We couldnâ€™t reach the shop. Check your connection and try again.");
+            throw new Error("We couldn’t reach the shop. Check your connection and try again.");
         }
         var result;
-        try { result = await response.json(); } catch (error) { throw new Error("The shop couldnâ€™t load that response. Refresh and try again."); }
+        try { result = await response.json(); } catch (error) { throw new Error("The shop couldn’t load that response. Refresh and try again."); }
         if (!response.ok || result.ok === false) {
-            var requestError = new Error(result.message || "That didnâ€™t work. Please try again.");
+            var requestError = new Error(result.message || "That didn’t work. Please try again.");
             requestError.status = response.status;
             throw requestError;
         }
@@ -83,7 +83,7 @@
         return new Promise(function (resolve) {
             var layer = document.createElement("div");
             layer.className = "modal-backdrop floral-fallback-backdrop";
-            layer.innerHTML = '<section class="floral-fallback-card" role="dialog" aria-modal="true"><div>âœ¿</div><h2></h2><p></p><button type="button"></button></section>';
+            layer.innerHTML = '<section class="floral-fallback-card" role="dialog" aria-modal="true"><div>✿</div><h2></h2><p></p><button type="button"></button></section>';
             layer.querySelector("h2").textContent = title;
             layer.querySelector("p").textContent = message.replace(/<[^>]+>/g, "");
             layer.querySelector("button").textContent = confirmText || "Lovely";
@@ -121,12 +121,12 @@
         var start = (currentPage - 1) * pageSize;
         var items = filtered.slice(start, start + pageSize);
         document.getElementById("shop-count").textContent = filtered.length + (filtered.length === 1 ? " bouquet" : " bouquets");
-        document.getElementById("page-label").textContent = (filtered.length ? String(start + 1).padStart(2, "0") : "00") + " â€” " + String(Math.min(start + pageSize, filtered.length)).padStart(2, "0");
+        document.getElementById("page-label").textContent = (filtered.length ? String(start + 1).padStart(2, "0") : "00") + " — " + String(Math.min(start + pageSize, filtered.length)).padStart(2, "0");
         document.getElementById("page-number").textContent = String(currentPage).padStart(2, "0") + " / " + String(pages).padStart(2, "0");
         document.getElementById("page-prev").disabled = currentPage <= 1;
         document.getElementById("page-next").disabled = currentPage >= pages;
         if (!items.length) {
-            productGrid.innerHTML = '<div class="empty-products">There arenâ€™t any flowers in this little corner just yet.</div>';
+            productGrid.innerHTML = '<div class="empty-products">There aren’t any flowers in this little corner just yet.</div>';
             return;
         }
         productGrid.innerHTML = items.map(function (product, index) {
@@ -145,13 +145,13 @@
         document.getElementById("summary-total").textContent = money.format(state.cart.total || 0);
         var root = document.getElementById("cart-items");
         if (!state.cart.items || state.cart.items.length === 0) {
-            root.innerHTML = '<div class="cart-empty"><span>âœ¿</span><h3>Your cart is empty.</h3><p>Browse the shop to find a bunch you like.</p><button class="button button-dark" data-go-shop>Browse flowers <span>â†’</span></button></div>';
+            root.innerHTML = '<div class="cart-empty"><span>✿</span><h3>Your cart is empty.</h3><p>Browse the shop to find a bunch you like.</p><button class="button button-dark" data-go-shop>Browse flowers <span>→</span></button></div>';
             return;
         }
         root.innerHTML = state.cart.items.map(function (item) {
             return '<article class="cart-item"><img src="assets/images/' + encodeURIComponent(item.image) + '" alt="' + escapeHtml(item.name) + '">' +
                 '<div><h3>' + escapeHtml(item.name) + '</h3><p>' + escapeHtml(item.description) + '</p>' +
-                '<div class="quantity-control"><button data-quantity="' + escapeHtml(item.id) + '" data-value="' + (item.quantity - 1) + '" aria-label="Remove one">âˆ’</button><span>' + item.quantity + '</span><button data-quantity="' + escapeHtml(item.id) + '" data-value="' + (item.quantity + 1) + '" aria-label="Add one">+</button></div></div>' +
+                '<div class="quantity-control"><button data-quantity="' + escapeHtml(item.id) + '" data-value="' + (item.quantity - 1) + '" aria-label="Remove one">−</button><span>' + item.quantity + '</span><button data-quantity="' + escapeHtml(item.id) + '" data-value="' + (item.quantity + 1) + '" aria-label="Add one">+</button></div></div>' +
                 '<div class="cart-item-price"><b>' + money.format(item.lineTotal) + '</b><button class="remove-item" data-remove="' + escapeHtml(item.id) + '">Remove</button></div></article>';
         }).join("");
     }
@@ -159,7 +159,7 @@
     function renderAccount() {
         if (!state.user) return;
         document.getElementById("account-welcome").textContent = "Hello, " + state.user.name.split(/\s+/)[0];
-        document.getElementById("account-avatar-initial").textContent = (state.user.name.trim()[0] || "âœ¿").toUpperCase();
+        document.getElementById("account-avatar-initial").textContent = (state.user.name.trim()[0] || "✿").toUpperCase();
         var avatarImage = document.getElementById("account-avatar-image");
         avatarImage.classList.toggle("hidden", !state.user.profileImage);
         document.getElementById("account-avatar-initial").classList.toggle("hidden", !!state.user.profileImage);
@@ -173,7 +173,7 @@
         document.getElementById("order-history").innerHTML = orders.length
             ? '<h3>Your orders</h3>' + orders.map(function (order) {
                 var date = new Date(order.createdAt);
-                return '<div class="order-row"><div><b>' + escapeHtml(order.id) + '</b><small>' + date.toLocaleDateString() + ' Â· ' + order.items.length + (order.items.length === 1 ? ' bouquet' : ' bouquets') + ' Â· ' + escapeHtml(order.paymentMethod || 'Payment method not recorded') + '</small></div><div class="order-status">' + escapeHtml(order.status) + (order.paymentStatus ? ' Â· ' + escapeHtml(order.paymentStatus) : '') + ' Â· ' + money.format(order.total) + '</div></div>';
+                return '<div class="order-row"><div><b>' + escapeHtml(order.id) + '</b><small>' + date.toLocaleDateString() + ' · ' + order.items.length + (order.items.length === 1 ? ' bouquet' : ' bouquets') + ' · ' + escapeHtml(order.paymentMethod || 'Payment method not recorded') + '</small></div><div class="order-status">' + escapeHtml(order.status) + (order.paymentStatus ? ' · ' + escapeHtml(order.paymentStatus) : '') + ' · ' + money.format(order.total) + '</div></div>';
             }).join("")
             : "";
     }
@@ -352,7 +352,7 @@
             state.orders = [];
             setHeader();
             showPage("home");
-            notify("Youâ€™ve signed out. Come back any time.");
+            notify("You’ve signed out. Come back any time.");
         } catch (error) { notify(error.message); }
     });
     document.querySelectorAll(".nav-link").forEach(function (link) {
@@ -392,8 +392,8 @@
             resetEmail = data.email;
             var note = document.getElementById("reset-code-note");
             var deliveryNote = result.emailSent
-                ? "Weâ€™ve emailed a reset code to " + escapeHtml(resetEmail) + ". For this demo, itâ€™s also shown here."
-                : "Your reset code for " + escapeHtml(resetEmail) + " is ready. Local email isnâ€™t configured, so use the demo code shown here.";
+                ? "We’ve emailed a reset code to " + escapeHtml(resetEmail) + ". For this demo, it’s also shown here."
+                : "Your reset code for " + escapeHtml(resetEmail) + " is ready. Local email isn’t configured, so use the demo code shown here.";
             note.innerHTML = deliveryNote + "<strong>" + escapeHtml(result.demoCode) + "</strong>This code expires in 10 minutes.";
             note.classList.remove("hidden");
             document.getElementById("reset-complete-form").classList.remove("hidden");
@@ -406,7 +406,7 @@
             await api("reset_password", { email: resetEmail, code: data.code, password: data.password });
             closeModal("reset-modal");
             openAuth("login");
-            floralNotice("Password updated", "Your new password is ready. Come on in whenever youâ€™re ready.", "Back to sign in");
+            floralNotice("Password updated", "Your new password is ready. Come on in whenever you’re ready.", "Back to sign in");
         } catch (error) { notify(error.message); }
     });
 
@@ -437,7 +437,7 @@
             closeModal("checkout-modal");
             renderCart();
             setHeader();
-            await floralNotice("Order saved", "Weâ€™ve saved order " + escapeHtml(result.order.id) + " with " + escapeHtml(result.order.paymentMethod) + ". No payment was taken through this demo site.", "View account");
+            await floralNotice("Order saved", "We’ve saved order " + escapeHtml(result.order.id) + " with " + escapeHtml(result.order.paymentMethod) + ". No payment was taken through this demo site.", "View account");
             showPage("account");
         } catch (error) {
             notify(error.message);
@@ -524,7 +524,7 @@
 
     refreshState().catch(function (error) {
         notify(error.message);
-        productGrid.innerHTML = '<div class="empty-products">Weâ€™re arranging the flower table. Please refresh in a moment.</div>';
+        productGrid.innerHTML = '<div class="empty-products">We’re arranging the flower table. Please refresh in a moment.</div>';
     });
 }());
 
