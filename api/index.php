@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f9f6ee">
     <meta name="description" content="Hand-tied flowers for birthdays, ordinary Tuesdays, and all the days in between. Made with care in Metro Manila.">
     <title>Flowers and Bloom | A little joy, sent your way</title>
-    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/styles.css?v=stamp-contrast-20261127">
 </head>
 <body>
     <div class="announcement">Fresh bunches, delivered around Metro Manila <span>✿</span></div>
@@ -87,7 +87,7 @@
         <section class="story-section" id="our-story">
             <div class="story-image-wrap">
                 <div class="story-image"></div>
-                <div class="story-stamp"><span>✿</span><b>GATHERED<br>WITH LOVE</b><small>EVERY SINGLE TIME</small></div>
+                <div class="story-stamp" style="color:#263c31 !important; opacity:1;"><span>✿</span><b style="color:#263c31 !important; -webkit-text-fill-color:#263c31 !important; opacity:1;">GATHERED<br>WITH LOVE</b><small style="color:#586b5d !important; -webkit-text-fill-color:#586b5d !important; opacity:1;">EVERY SINGLE TIME</small></div>
             </div>
             <div class="story-copy">
                 <span class="eyebrow eyebrow-light">A small studio with a big heart</span>
