@@ -147,7 +147,7 @@ h1, h2, h3, p { margin-top: 0; }
 .journal-card h3 { font-family: var(--serif); font-size: 19px; line-height: 1.35; font-weight: 500; margin: 9px 0 7px; }
 .journal-card p { font-size: 10px; color: #85847b; line-height: 1.6; margin: 0; }
 .newsletter-section { background: #efe6da; padding: 70px 20px 67px; text-align: center; position: relative; overflow: hidden; }
-.newsletter-section::before, .newsletter-section::after { content: "✿"; position: absolute; color: #b87a70; opacity: .14; font-size: 210px; line-height: 1; }
+.newsletter-section::before, .newsletter-section::after { content: "âœ¿"; position: absolute; color: #b87a70; opacity: .14; font-size: 210px; line-height: 1; }
 .newsletter-section::before { left: 4%; top: -55px; transform: rotate(-22deg); }
 .newsletter-section::after { right: 4%; bottom: -90px; transform: rotate(24deg); }
 .newsletter-flower { color: #a96d65; font-size: 24px; margin-bottom: 9px; position: relative; z-index: 1; }
@@ -493,3 +493,7 @@ html[data-theme="dark"] .cart-shortcut b { background: #e0a79d; color: #18251e; 
     .add-button, .newsletter-form button, .text-button { min-height: 44px; font-size: 11px; }
     .pagination-controls button { min-width: 40px; min-height: 40px; }
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> d40da9fcf085d62b05330cda429481fcffe38f76

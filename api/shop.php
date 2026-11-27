@@ -379,7 +379,7 @@ if ($action === 'newsletter_subscribe') {
     $added = save_newsletter_subscription($email);
     respond([
         'ok' => true,
-        'message' => $added ? 'You’re on the list. We’ll send the occasional studio note your way.' : 'You’re already on the list. We’ll be in touch when there’s something lovely to share.',
+        'message' => $added ? 'Youâ€™re on the list. Weâ€™ll send the occasional studio note your way.' : 'Youâ€™re already on the list. Weâ€™ll be in touch when thereâ€™s something lovely to share.',
     ]);
 }
 
@@ -419,14 +419,14 @@ if ($action === 'login') {
         foreach ($store['users'] as &$user) {
             if ($user['email'] === $email) {
                 if (!password_verify($password, $user['password'])) {
-                    return ['error' => 'That email and password don’t match.'];
+                    return ['error' => 'That email and password donâ€™t match.'];
                 }
                 $welcomeType = !empty($user['hasLoggedIn']) ? 'back' : 'first';
                 $user['hasLoggedIn'] = true;
                 return ['user' => $user, 'welcomeType' => $welcomeType];
             }
         }
-        return ['error' => 'That email and password don’t match.'];
+        return ['error' => 'That email and password donâ€™t match.'];
     });
     if (isset($result['error'])) {
         fail($result['error'], 401);
@@ -612,3 +612,4 @@ if ($action === 'checkout') {
 }
 
 fail('That shop action was not found.', 404);
+
