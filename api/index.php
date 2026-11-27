@@ -18,7 +18,7 @@
         <button class="mobile-menu-button" id="mobile-menu-button" aria-label="Open menu" aria-expanded="false"><span></span><span></span></button>
         <nav class="main-nav" id="main-nav" aria-label="Main navigation">
             <a href="#home" class="nav-link active">Home</a>
-            <a href="#shop" class="nav-link shop-link-disabled" id="shop-nav-link" aria-disabled="true" tabindex="-1">Shop</a>
+            <a href="#shop" class="nav-link" id="shop-nav-link">Shop</a>
             <a href="#account-view" class="nav-link" id="profile-nav-link">Profile settings</a>
             <a href="#our-story" class="nav-link">The studio</a>
             <a href="#journal" class="nav-link">Flower notes</a>
@@ -41,13 +41,13 @@
                 <h1>A little joy,<br>sent <em>your way.</em></h1>
                 <p>Birthday flowers, a thank-you, or just because. Tell us who they’re for and we’ll put together a bunch worth opening the door for.</p>
                 <div class="hero-actions">
-                    <a href="#shop" class="button button-dark shop-link-disabled" aria-disabled="true" tabindex="-1">Browse the flowers <span>↗</span></a>
+                    <a href="#shop" class="button button-dark">Browse the flowers <span>↗</span></a>
                     <a href="#our-story" class="text-link">Meet the studio <span>↓</span></a>
                 </div>
                 <div class="hero-caption"><span class="caption-flower">✿</span><span>Picked with care.<br>Tied by hand.</span></div>
             </div>
             <div class="hero-side-note">GROWN WITH CARE<br><span>✳</span><br>GIVEN WITH LOVE</div>
-            <a class="scroll-cue shop-link-disabled" href="#shop" aria-disabled="true" tabindex="-1"><span></span> A little further</a>
+            <a class="scroll-cue" href="#shop"><span></span> A little further</a>
         </section>
 
         <section class="promise-strip" aria-label="Our promises">
@@ -58,7 +58,7 @@
             <div><span class="promise-icon">↗</span><p><b>City delivery</b><small>Across Metro Manila</small></p></div>
         </section>
 
-        <section class="shop-section section-wrap hidden" id="shop">
+        <section class="shop-section section-wrap" id="shop">
             <div class="section-heading">
                 <div><span class="eyebrow eyebrow-light">Made fresh at the studio</span><h2>Find your <em>flowers.</em></h2></div>
                 <p>Have a look around. The right bunch<br>usually has a way of finding you.</p>
@@ -121,7 +121,7 @@
         </section>
 
         <section class="cart-section section-wrap hidden" id="cart-view">
-            <div class="section-heading"><div><span class="eyebrow eyebrow-light">Your selections</span><h2>Your <em>cart.</em></h2></div><a class="text-link shop-link-disabled" href="#shop" aria-disabled="true" tabindex="-1">Keep browsing <span>↗</span></a></div>
+            <div class="section-heading"><div><span class="eyebrow eyebrow-light">Your selections</span><h2>Your <em>cart.</em></h2></div><a class="text-link" href="#shop">Keep browsing <span>↗</span></a></div>
             <div class="cart-layout"><div id="cart-items" class="cart-items"></div><aside class="cart-summary"><span class="eyebrow eyebrow-light">Order summary</span><h3>Your total</h3><div class="summary-line"><span>Flowers</span><b id="summary-subtotal">₱0</b></div><div class="summary-line"><span>Delivery</span><span>At checkout</span></div><div class="summary-total"><span>Total</span><b id="summary-total">₱0</b></div><p>Add the recipient and address on the next screen.</p><button class="button button-dark button-full" id="checkout-button">Continue to checkout <span>→</span></button><small>Secure, account-protected checkout</small></aside></div>
         </section>
 
@@ -151,7 +151,7 @@
     </main>
 
     <footer class="site-footer">
-        <div class="footer-top"><a class="brand footer-brand" href="#home"><span class="brand-mark">f<span>✿</span></span><span class="brand-name">flowers <em>&</em> bloom<small>FLORAL STUDIO · MANILA</small></span></a><p>Flowers, arranged by hand<br>in Metro Manila.</p><div class="footer-links"><a href="#shop" class="shop-link-disabled" aria-disabled="true" tabindex="-1">Shop flowers</a><a href="#our-story">The studio</a><button id="footer-account">My account</button></div></div>
+        <div class="footer-top"><a class="brand footer-brand" href="#home"><span class="brand-mark">f<span>✿</span></span><span class="brand-name">flowers <em>&</em> bloom<small>FLORAL STUDIO · MANILA</small></span></a><p>Flowers, arranged by hand<br>in Metro Manila.</p><div class="footer-links"><a href="#shop">Shop flowers</a><a href="#our-story">The studio</a><button id="footer-account">My account</button></div></div>
         <div class="footer-bottom"><span>© <span id="year"></span> Flowers and Bloom. </span><span>Metro Manila · Philippines <b>✿</b></span></div>
     </footer>
 
