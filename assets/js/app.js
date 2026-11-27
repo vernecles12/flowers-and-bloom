@@ -130,13 +130,32 @@
             return;
         }
         productGrid.innerHTML = items.map(function (product, index) {
+            var detailsReviews = product.reviews || [];
             return '<article class="product-card" style="animation-delay:' + (index * 45) + 'ms">' +
                 '<div class="product-photo"><span class="product-tag">' + escapeHtml(product.tag) + '</span>' +
-                '<img src="assets/images/' + encodeURIComponent(product.image) + '" alt="' + escapeHtml(product.name) + ' bouquet" loading="lazy" onerror="this.style.opacity=0.15;this.alt=\'Flower photo loading soon\'"></div>' +
+                '<img src="assets/images/' + encodeURIComponent(product.image) + '" alt="' + escapeHtml(product.name) + ' bouquet" loading="lazy" onerror="this.style.opacity=0.15;this.alt=\'Flower photo loading soon\'">' +
+                '<button class="product-photo-link" data-product-details="' + escapeHtml(product.id) + '" aria-label="See ' + escapeHtml(product.name) + ' ratings and customer notes"></button></div>' +
                 '<div class="product-card-top"><h3>' + escapeHtml(product.name) + '</h3><span class="product-price">' + money.format(product.price) + '</span></div>' +
+                '<button class="rating-summary" data-product-details="' + escapeHtml(product.id) + '" aria-label="Rated ' + Number(product.rating || 0).toFixed(1) + ' out of 5. Read sample customer notes">' +
+                '<span class="rating-stars" aria-hidden="true">★★★★★</span><b>' + Number(product.rating || 0).toFixed(1) + '</b><span>· ' + detailsReviews.length + ' sample notes</span></button>' +
                 '<p class="product-description">' + escapeHtml(product.description) + '</p>' +
                 '<button class="add-button" data-add="' + escapeHtml(product.id) + '">Add to bag <span>+</span></button></article>';
         }).join("");
+    }
+
+    function openProductDetails(productId) {
+        var product = state.products.find(function (item) { return item.id === productId; });
+        if (!product) return;
+        var reviews = product.reviews || [];
+        document.getElementById("reviews-title").textContent = product.name;
+        document.getElementById("reviews-overview").innerHTML =
+            '<strong>' + Number(product.rating || 0).toFixed(1) + '</strong><span class="rating-stars" aria-label="out of 5 stars">★★★★★</span>' +
+            '<small>Based on ' + reviews.length + ' sample customer notes</small>';
+        document.getElementById("product-review-list").innerHTML = reviews.map(function (review) {
+            var rating = Math.max(0, Math.min(5, Number(review.rating) || 0));
+            return '<article class="customer-review"><div class="customer-review-heading"><b>' + escapeHtml(review.name) + '</b><span class="rating-stars" aria-label="' + rating + ' out of 5 stars">' + '★'.repeat(rating) + '<span class="empty-stars">' + '☆'.repeat(5 - rating) + '</span></span></div><p>' + escapeHtml(review.comment) + '</p></article>';
+        }).join("");
+        openModal("reviews-modal");
     }
 
     function renderCart() {
@@ -310,6 +329,8 @@
         });
     });
     document.addEventListener("click", function (event) {
+        var details = event.target.closest("[data-product-details]");
+        if (details) { openProductDetails(details.dataset.productDetails); return; }
         var add = event.target.closest("[data-add]");
         if (add) { addProduct(add.dataset.add); return; }
         var quantity = event.target.closest("[data-quantity]");
@@ -416,11 +437,12 @@
     document.querySelectorAll("[data-close-modal]").forEach(function (button) { button.addEventListener("click", function () { pendingProduct = null; closeModal("auth-modal"); }); });
     document.querySelectorAll("[data-close-reset]").forEach(function (button) { button.addEventListener("click", function () { closeModal("reset-modal"); }); });
     document.querySelectorAll("[data-close-checkout]").forEach(function (button) { button.addEventListener("click", function () { closeModal("checkout-modal"); }); });
+    document.querySelectorAll("[data-close-reviews]").forEach(function (button) { button.addEventListener("click", function () { closeModal("reviews-modal"); }); });
     document.querySelectorAll(".modal-backdrop").forEach(function (modal) {
         modal.addEventListener("click", function (event) { if (event.target === modal) closeModal(modal.id); });
     });
     document.addEventListener("keydown", function (event) {
-        if (event.key === "Escape") ["auth-modal", "reset-modal", "checkout-modal"].forEach(function (id) { closeModal(id); });
+        if (event.key === "Escape") ["auth-modal", "reset-modal", "checkout-modal", "reviews-modal"].forEach(function (id) { closeModal(id); });
     });
 
     document.getElementById("checkout-button").addEventListener("click", function () {
