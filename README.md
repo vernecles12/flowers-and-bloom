@@ -68,3 +68,23 @@ SweetAlert notices use a green success check for successful sign-in and complete
 ## SweetAlert contrast and semantic success states
 
 The `flowers-and-bloom-live.vercel.app` hostname is attached to the `flowers-and-bloom-live` Vercel project. Keep that project connected to the populated private Blob store. SweetAlert and its custom fallback share the same semantic states: green for success, red for errors, and amber for warnings. Confirm buttons use white text on dark green; cancel buttons use dark-green text on a pale background. Button hover and press transitions respect reduced-motion preferences.
+
+
+## Full-stack shop features
+
+- Search and sort the flower catalogue by name, category, price, and rating.
+- Save favourite bouquets to a customer-specific wishlist. Saved flowers are stored in the private shop data and require sign-in.
+- Stock counts are shown on product cards. New catalogue items start with 12 units until staff changes the count. Adding to a cart and checking out validates current stock; successful orders reserve the purchased quantities.
+- Customer order pages show a fulfilment timeline, recipient and delivery details, payment status, item list, and saved status updates.
+- A private studio dashboard shows order/customer summaries, low-stock counts, recent orders, order-status controls, and inventory editing.
+
+## Configure studio staff access
+
+The staff dashboard is protected in the PHP API, not only hidden in the browser. Configure a server-side allowlist before using it:
+
+- **Vercel:** add `SHOP_ADMIN_EMAILS` as an environment variable on the `flowers-and-bloom-live` project. Set it to the exact email address or comma-separated staff email addresses that should be administrators. Apply it to Production (and Preview/Development only when needed), then redeploy.
+- **XAMPP:** create `storage/admin-emails.txt` and put one authorised account email on each line. The file is ignored by Git and should remain inside the protected `storage` directory.
+
+Create or use a normal customer account with an email in that allowlist. That account will see **Studio dashboard** in the navigation. Never add administrator email addresses or passwords to front-end JavaScript or public assets.
+
+The shop remains a demonstration checkout: GCash transfers and payments at delivery still require manual handling. This dashboard records order stages and inventory; it does not process real payments or dispatch courier services.
