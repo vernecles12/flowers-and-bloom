@@ -19,7 +19,9 @@ function shop_storage_path(): string
 
 function blob_credentials(): array
 {
-    $token = (string)getenv('BLOB_READ_WRITE_TOKEN');
+    // Vercel injects a rotating, store-scoped OIDC token at runtime. Prefer it
+    // over a long-lived read-write token, while keeping local/manual setups working.
+    $token = (string)(getenv('VERCEL_OIDC_TOKEN') ?: getenv('BLOB_READ_WRITE_TOKEN'));
     $storeId = (string)getenv('BLOB_STORE_ID');
     if ($token === '' || $storeId === '') {
         throw new RuntimeException('Blob credentials are missing.');
