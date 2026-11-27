@@ -1398,6 +1398,7 @@ html[data-theme="dark"] .button-outline:hover { background: #d7e5cf; color: #203
 .main-nav .nav-link:nth-child(4) { animation-delay: .21s; }
 .main-nav .nav-link:nth-child(5) { animation-delay: .26s; }
 .main-nav .nav-link:nth-child(6) { animation-delay: .31s; }
+.main-nav .nav-link:nth-child(7) { animation-delay: .36s; }
 .nav-link { transition: color .2s ease, transform .2s ease; }
 .nav-link:hover { transform: translateY(-2px); }
 .nav-link.active::after {
@@ -1430,6 +1431,7 @@ html[data-theme="dark"] .button-outline:hover { background: #d7e5cf; color: #203
     .main-nav.open .nav-link:nth-child(4) { animation-delay: .11s; }
     .main-nav.open .nav-link:nth-child(5) { animation-delay: .14s; }
     .main-nav.open .nav-link:nth-child(6) { animation-delay: .17s; }
+    .main-nav.open .nav-link:nth-child(7) { animation-delay: .20s; }
     .main-nav.open .nav-link:hover { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {

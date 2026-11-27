@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f9f6ee">
     <meta name="description" content="Hand-tied flowers for birthdays, ordinary Tuesdays, and all the days in between. Made with care in Metro Manila.">
     <title>Flowers and Bloom | A little joy, sent your way</title>
-    <link rel="stylesheet" href="assets/css/styles.css?v=shop-page-nav-20261127">
+    <link rel="stylesheet" href="assets/css/styles.css?v=public-shop-nav-20261127">
 </head>
 <body>
     <div class="announcement">Fresh bunches, delivered around Metro Manila <span>✿</span></div>
@@ -18,6 +18,7 @@
         <button class="mobile-menu-button" id="mobile-menu-button" aria-label="Open menu" aria-expanded="false"><span></span><span></span></button>
         <nav class="main-nav" id="main-nav" aria-label="Main navigation">
             <a href="#home" class="nav-link active">Home</a>
+            <a href="#shop" class="nav-link" id="browse-flowers-nav-link">Browse flowers</a>
             <a href="#shop" class="nav-link" id="shop-nav-link">Shop</a>
             <a href="#account-view" class="nav-link" id="profile-nav-link">Profile settings</a>
             <a href="#our-story" class="nav-link">The studio</a>
@@ -41,7 +42,7 @@
                 <h1>A little joy,<br>sent <em>your way.</em></h1>
                 <p>Birthday flowers, a thank-you, or just because. Tell us who they’re for and we’ll put together a bunch worth opening the door for.</p>
                 <div class="hero-actions">
-                    <a href="#shop" class="button button-dark">Browse the flowers <span>↗</span></a>
+                    <a href="#shop" class="button button-dark">Browse Shops <span>↗</span></a>
                     <a href="#our-story" class="text-link">Meet the studio <span>↓</span></a>
                 </div>
                 <div class="hero-caption"><span class="caption-flower">✿</span><span>Picked with care.<br>Tied by hand.</span></div>
@@ -194,7 +195,7 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="assets/js/app.js"></script>
+    <script src="assets/js/app.js?v=public-shop-nav-20261127"></script>
 </body>
 </html>
 
