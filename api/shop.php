@@ -542,16 +542,16 @@ if ($action === 'update_profile') {
         fail('Your new password needs at least 8 characters.');
     }
     if ($profileImage !== null) {
-        if (!is_string($profileImage) || strlen($profileImage) > 400000 || !preg_match('#^data:image/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$#', $profileImage, $imageParts)) {
-            fail('Choose a JPG, PNG, or WebP image under 300 KB.');
+        if (!is_string($profileImage) || strlen($profileImage) > 850000 || !preg_match('#^data:image/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$#', $profileImage, $imageParts)) {
+            fail('Choose a JPG, PNG, or WebP image under 600 KB.');
         }
         if (!function_exists('getimagesizefromstring')) {
             fail('Photo uploads are not available on this server yet.', 503);
         }
         $imageBytes = base64_decode($imageParts[2], true);
         $imageInfo = $imageBytes !== false ? @getimagesizefromstring($imageBytes) : false;
-        if ($imageBytes === false || strlen($imageBytes) > 300000 || !$imageInfo || (int)$imageInfo[0] > 6000 || (int)$imageInfo[1] > 6000 || !in_array($imageInfo['mime'] ?? '', ['image/jpeg', 'image/png', 'image/webp'], true)) {
-            fail('That photo could not be read. Please choose a JPG, PNG, or WebP image under 300 KB.');
+        if ($imageBytes === false || strlen($imageBytes) > 600000 || !$imageInfo || (int)$imageInfo[0] > 6000 || (int)$imageInfo[1] > 6000 || !in_array($imageInfo['mime'] ?? '', ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            fail('That photo could not be read. Please choose a JPG, PNG, or WebP image under 600 KB.');
         }
     }
     $result = store_update(function (&$store) use ($userId, $name, $currentPassword, $newPassword, $profileImage, $removeProfileImage) {

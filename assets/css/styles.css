@@ -435,3 +435,61 @@ html[data-theme="dark"] .journal-photo, html[data-theme="dark"] .product-photo i
 @media (prefers-reduced-motion: reduce) {
     *,*::before,*::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Clearer account photo, cart badge and generous controls across themes. */
+.account-avatar {
+    width: 104px;
+    height: 104px;
+    margin-bottom: 18px;
+    border: 3px solid rgba(255,255,255,.78);
+    box-shadow: 0 0 0 1px rgba(36,58,47,.24), 0 8px 20px rgba(12,28,20,.22);
+    background: #f6f1e6;
+}
+.account-avatar img { object-fit: cover; image-rendering: auto; }
+.cart-shortcut {
+    min-height: 44px;
+    gap: 9px;
+    padding: 5px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.cart-shortcut b {
+    width: 26px;
+    height: 26px;
+    border: 2px solid var(--paper);
+    background: #a96059;
+    color: #fff;
+    font-size: 12px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+.header-login, .theme-toggle { min-height: 44px; font-size: 11px; }
+.mobile-menu-button { min-width: 44px; min-height: 44px; }
+.avatar-upload-button { min-height: 46px; padding: 12px 16px; font-size: 12px; font-weight: 600; }
+.button, .add-button, .text-button, .newsletter-form button, .pagination-controls button,
+.filter-chip, .auth-tab, .quantity-control button, .remove-item {
+    font-size: 12px;
+}
+.add-button, .text-button, .newsletter-form button { min-height: 44px; }
+.pagination-controls button { min-width: 40px; min-height: 40px; }
+.filter-chip { min-height: 40px; padding: 9px 13px; }
+.quantity-control button { min-width: 36px; min-height: 36px; }
+.auth-tab { min-height: 44px; }
+button:focus-visible, a:focus-visible, input:focus-visible {
+    outline: 3px solid #b66d64;
+    outline-offset: 3px;
+}
+html[data-theme="dark"] .cart-shortcut b { background: #e0a79d; color: #18251e; border-color: #18251e; }
+
+@media (max-width: 700px) {
+    .cart-shortcut { min-height: 44px; gap: 5px; padding: 4px 5px; font-size: 10px; }
+    .cart-shortcut svg { width: 16px; height: 16px; }
+    .cart-shortcut b { width: 24px; height: 24px; font-size: 11px; }
+    .header-actions { gap: 7px; }
+    .header-login { min-height: 42px; padding: 8px 9px; font-size: 10px; }
+    .account-avatar { width: 96px; height: 96px; margin-bottom: 16px; }
+    .filter-chip { min-height: 40px; padding: 9px 10px; font-size: 11px; }
+    .add-button, .newsletter-form button, .text-button { min-height: 44px; font-size: 11px; }
+    .pagination-controls button { min-width: 40px; min-height: 40px; }
+}

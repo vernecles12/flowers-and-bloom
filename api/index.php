@@ -26,7 +26,7 @@
         <div class="header-actions">
             <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode"><span class="theme-icon" aria-hidden="true">☾</span><span class="theme-label">Dark</span></button>
             <button class="icon-button account-shortcut" id="account-shortcut" aria-label="Account settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.7-3.2 3.3-5 7-5s6.3 1.8 7 5"/></svg></button>
-            <button class="cart-shortcut" id="cart-shortcut"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.1 11.1a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 1.9-1.4L21 9H6"/><circle cx="9.5" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg><span>Add to Cart</span><b id="cart-count">0</b></button>
+            <button class="cart-shortcut" id="cart-shortcut" aria-label="My Cart, 0 items"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.1 11.1a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 1.9-1.4L21 9H6"/><circle cx="9.5" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg><span>My Cart</span><b id="cart-count" aria-live="polite">0</b></button>
             <button class="header-login" id="header-login">Sign in</button>
         </div>
     </header>

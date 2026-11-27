@@ -107,7 +107,9 @@
     function setHeader() {
         var login = document.getElementById("header-login");
         login.textContent = state.user ? "My account" : "Sign in";
-        document.getElementById("cart-count").textContent = state.cart.count || 0;
+        var cartCount = Number(state.cart.count || 0);
+        document.getElementById("cart-count").textContent = cartCount;
+        document.getElementById("cart-shortcut").setAttribute("aria-label", "My Cart, " + cartCount + (cartCount === 1 ? " item" : " items"));
     }
 
     function renderProducts() {
@@ -467,11 +469,14 @@
             var image = new Image();
             image.onload = function () {
                 var canvas = document.createElement("canvas");
-                var scale = Math.min(1, 480 / Math.max(image.width, image.height));
+                var scale = Math.min(1, 768 / Math.max(image.width, image.height));
                 canvas.width = Math.max(1, Math.round(image.width * scale));
                 canvas.height = Math.max(1, Math.round(image.height * scale));
-                canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
-                selectedProfileImage = canvas.toDataURL("image/jpeg", .78);
+                var context = canvas.getContext("2d");
+                context.imageSmoothingEnabled = true;
+                context.imageSmoothingQuality = "high";
+                context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                selectedProfileImage = canvas.toDataURL("image/jpeg", .9);
                 removeProfileImage = false;
                 var preview = document.getElementById("account-avatar-image");
                 preview.src = selectedProfileImage;
