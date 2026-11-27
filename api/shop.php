@@ -689,6 +689,17 @@ if ($action === 'admin_update_order_status') {
             if (!in_array($nextStatus, $transitions[$currentStatus] ?? [], true)) {
                 return ['error' => 'That status change is not allowed from the current order stage.'];
             }
+            if ($nextStatus === 'Cancelled') {
+                // Return reserved units exactly once. Cancelled is a final state,
+                // so this transition cannot be repeated to restock the order twice.
+                foreach (($order['items'] ?? []) as $item) {
+                    $productId = (string)($item['id'] ?? '');
+                    $quantity = max(0, (int)($item['quantity'] ?? 0));
+                    if ($productId !== '' && $quantity > 0) {
+                        $store['inventory'][$productId] = min(5000, shop_stock($store, $productId) + $quantity);
+                    }
+                }
+            }
             $order['status'] = $nextStatus;
             if ($nextStatus === 'Confirmed' && str_contains(strtolower((string)($order['paymentMethod'] ?? '')), 'gcash')) {
                 $order['paymentStatus'] = 'Payment confirmed manually';
@@ -700,7 +711,7 @@ if ($action === 'admin_update_order_status') {
                 'status' => $nextStatus,
                 'at' => date(DATE_ATOM),
                 'note' => 'Updated by shop staff',
-                'updatedBy' => (string)($user['email'] ?? ''),
+                'updatedBy' => 'Shop team',
             ];
             $order['updatedAt'] = date(DATE_ATOM);
             return ['order' => $order];
