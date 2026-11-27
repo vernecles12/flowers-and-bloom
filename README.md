@@ -16,6 +16,12 @@ The Vercel entry points are `api/index.php` and `api/shop.php`. `vercel.json` ro
 
 The Vercel project uses a private Blob store for accounts, carts, orders, newsletter sign-ups, and PHP sessions. Vercel supplies `BLOB_READ_WRITE_TOKEN` when the store is connected to the project; `BLOB_STORE_ID` identifies that store. Local XAMPP continues to use `storage/shop.json`. That file is excluded from deployment and version control so local account data is not published.
 
+## Studio admin dashboard
+
+Open `/api/admin.php` from the storefront footer to access the studio dashboard. Access is restricted on the server: add an `ADMIN_EMAILS` environment variable in the Vercel project settings containing the exact administrator email address(es), separated by commas. Redeploy after saving the variable. The dashboard provides order/customer totals, a non-cancelled order-value estimate, order search/filtering, and controlled order-status updates. Only accounts whose signed-in email matches `ADMIN_EMAILS` can read customer delivery details or update orders. Do not put administrator credentials in frontend code or commit them to Git.
+
+Supported order statuses: Received, Preparing, Ready for dispatch, Out for delivery, Delivered, and Cancelled. The order-value figure is not proof of collected revenue; payment is still handled manually as described below.
+
 ## Shop features
 
 - Browse and filter 12 bouquet cards with next and previous pagination.
