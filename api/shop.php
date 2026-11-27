@@ -245,8 +245,12 @@ final class VercelBlobSessionHandler implements SessionHandlerInterface
     public function gc(int $max_lifetime): int|false { return 0; }
 }
 
+$action = $_GET['action'] ?? '';
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+$skipSessionStart = $action === 'catalog' && $method === 'GET';
+
 $blobSessionHandler = null;
-if (is_vercel_runtime()) {
+if (is_vercel_runtime() && !$skipSessionStart) {
     ini_set('display_errors', '0');
     $blobSessionHandler = new VercelBlobSessionHandler();
     session_set_save_handler($blobSessionHandler, true);
@@ -256,15 +260,17 @@ session_set_cookie_params([
     'secure' => is_vercel_runtime() || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
     'samesite' => 'Lax',
 ]);
-$sessionStarted = @session_start();
-if (!$sessionStarted || ($blobSessionHandler !== null && $blobSessionHandler->hasReadFailure())) {
-    error_log('Flowers and Bloom could not restore the private PHP session.');
-    http_response_code(503);
-    echo json_encode([
-        'ok' => false,
-        'message' => 'Your secure shop session could not be restored. Please refresh and try again.',
-    ]);
-    exit;
+if (!$skipSessionStart) {
+    $sessionStarted = @session_start();
+    if (!$sessionStarted || ($blobSessionHandler !== null && $blobSessionHandler->hasReadFailure())) {
+        error_log('Flowers and Bloom could not restore the private PHP session.');
+        http_response_code(503);
+        echo json_encode([
+            'ok' => false,
+            'message' => 'Your secure shop session could not be restored. Please refresh and try again.',
+        ]);
+        exit;
+    }
 }
 
 function respond(array $payload, int $status = 200): never
@@ -402,8 +408,6 @@ function cart_summary(array $store, string $userId): array
     return ['items' => $items, 'total' => $total, 'count' => array_sum(array_column($items, 'quantity'))];
 }
 
-$action = $_GET['action'] ?? '';
-$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $rawBody = file_get_contents('php://input') ?: '';
 $input = json_decode($rawBody ?: '[]', true);
 $input = is_array($input) ? $input : [];
