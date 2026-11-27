@@ -160,6 +160,7 @@ function empty_shop_store(): array
         'users' => [],
         'carts' => [],
         'orders' => [],
+        'customProducts' => [],
         'newsletter' => [],
         'wishlists' => [],
         'inventory' => [],
@@ -658,7 +659,7 @@ $userId = $user['id'];
 
 if ($action === 'toggle_favorite') {
     $productId = (string)($input['productId'] ?? '');
-    $validProductIds = array_column(products(), 'id');
+    $validProductIds = array_column(shop_products_for_store($store), 'id');
     if (!in_array($productId, $validProductIds, true)) {
         fail('That flower could not be found.', 404);
     }
@@ -740,7 +741,7 @@ if ($action === 'admin_update_inventory') {
     require_shop_admin($user);
     $productId = trim((string)($input['productId'] ?? ''));
     $quantity = filter_var($input['stock'] ?? null, FILTER_VALIDATE_INT);
-    $validProductIds = array_column(products(), 'id');
+    $validProductIds = array_column(shop_products_for_store($store), 'id');
     if (!in_array($productId, $validProductIds, true) || $quantity === false || $quantity < 0 || $quantity > 5000) {
         fail('Choose a valid flower and a stock number between 0 and 5,000.');
     }
@@ -759,10 +760,65 @@ if ($action === 'admin_update_inventory') {
     respond(['ok' => true, 'product' => $product, 'message' => 'Inventory updated.']);
 }
 
+if ($action === 'admin_add_product') {
+    require_shop_admin($user);
+    $name = trim((string)($input['name'] ?? ''));
+    $category = trim((string)($input['category'] ?? ''));
+    $tag = trim((string)($input['tag'] ?? 'New arrival'));
+    $description = trim((string)($input['description'] ?? ''));
+    $image = basename(trim((string)($input['image'] ?? '')));
+    $price = filter_var($input['price'] ?? null, FILTER_VALIDATE_INT);
+    $quantity = filter_var($input['stock'] ?? null, FILTER_VALIDATE_INT);
+    $categories = ['romance', 'signature', 'bright'];
+    if (text_length($name) < 2 || text_length($name) > 70 || !in_array($category, $categories, true)) {
+        fail('Enter a flower name and choose a valid category.');
+    }
+    if ($price === false || $price < 1 || $price > 100000 || $quantity === false || $quantity < 0 || $quantity > 5000) {
+        fail('Enter a price from ₱1 to ₱100,000 and stock from 0 to 5,000.');
+    }
+    if (text_length($tag) < 1 || text_length($tag) > 32 || text_length($description) < 10 || text_length($description) > 280) {
+        fail('Enter a short tag and a description between 10 and 280 characters.');
+    }
+    if (!preg_match('/^[a-zA-Z0-9_-]+\.(jpg|jpeg|png|webp)$/i', $image) || !is_file(dirname(__DIR__) . '/assets/images/' . $image)) {
+        fail('Choose an existing flower photo from the image list.');
+    }
+    $slugSource = function_exists('iconv') ? iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name) : $name;
+    $slug = trim((string)preg_replace('/[^a-z0-9]+/', '-', strtolower((string)$slugSource)), '-');
+    if ($slug === '') {
+        fail('Use a flower name with letters or numbers.');
+    }
+    $productId = substr($slug, 0, 48) . '-' . bin2hex(random_bytes(3));
+    $newProduct = [
+        'id' => $productId,
+        'name' => $name,
+        'category' => $category,
+        'price' => $price,
+        'image' => $image,
+        'tag' => $tag,
+        'description' => $description,
+        'reviews' => [],
+        'rating' => 0,
+        'reviewCount' => 0,
+    ];
+    store_update(function (&$store) use ($newProduct, $quantity) {
+        $store['customProducts'] = is_array($store['customProducts'] ?? null) ? $store['customProducts'] : [];
+        $store['customProducts'][] = $newProduct;
+        $store['inventory'][$newProduct['id']] = $quantity;
+        return true;
+    });
+    $latest = store_read();
+    foreach (shop_products_for_store($latest) as $product) {
+        if ($product['id'] === $productId) {
+            respond(['ok' => true, 'product' => $product, 'message' => 'Flower added to the shop.']);
+        }
+    }
+    fail('The flower was saved but could not be loaded. Refresh and try again.', 500);
+}
+
 if ($action === 'add_to_cart' || $action === 'update_cart' || $action === 'remove_from_cart') {
     $id = (string)($input['productId'] ?? '');
     $productExists = false;
-    foreach (products() as $product) {
+    foreach (shop_products_for_store($store) as $product) {
         if ($product['id'] === $id) {
             $productExists = true;
             break;

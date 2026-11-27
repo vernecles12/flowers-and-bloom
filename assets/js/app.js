@@ -418,12 +418,18 @@
         var data = state.adminData;
         var summary = data.summary || {};
         var root = document.getElementById("admin-content");
+        var identity = document.getElementById("admin-identity");
+        if (identity && state.user) {
+            identity.textContent = "Signed in as " + state.user.email + " · inventory and order controls active.";
+        }
         var stats = [
             ["Orders", summary.orders || 0],
             ["Open orders", summary.openOrders || 0],
             ["Delivered", summary.deliveredOrders || 0],
-            ["Order value", money.format(summary.orderValueTotal || 0)],
+            ["Revenue · delivered", money.format(summary.revenueTotal || 0)],
+            ["Open order value", money.format(summary.openOrderValue || 0)],
             ["Low-stock flowers", summary.lowStock || 0],
+            ["Units in stock", summary.totalStockUnits || 0],
             ["Customers", summary.customers || 0]
         ];
         var statsHtml = '<div class="admin-stat-grid">' + stats.map(function (entry) {
@@ -438,7 +444,11 @@
         var productHtml = products.map(function (product) {
             return '<article class="admin-stock-row"><div><b>' + escapeHtml(product.name) + '</b><small>' + escapeHtml(product.category) + ' · ' + money.format(product.price) + '</small></div><label>Units in stock<input type="number" min="0" max="5000" step="1" value="' + Number(product.stock) + '" data-admin-stock="' + escapeHtml(product.id) + '"></label><button class="button button-outline admin-save-button" data-save-stock="' + escapeHtml(product.id) + '">Update</button></article>';
         }).join("");
-        root.innerHTML = statsHtml + '<div class="admin-panel-grid"><section class="admin-panel"><div class="admin-panel-heading"><div><span class="eyebrow eyebrow-light">Order fulfilment</span><h3>Recent orders</h3></div><span>' + orders.length + ' shown</span></div>' + orderHtml + '</section><section class="admin-panel"><div class="admin-panel-heading"><div><span class="eyebrow eyebrow-light">Stock control</span><h3>Flower inventory</h3></div><span>Updates apply at checkout</span></div>' + productHtml + '</section></div>';
+        var imageOptions = Array.from(new Map(products.map(function (product) { return [product.image, product.name]; })).entries()).map(function (entry) {
+            return '<option value="' + escapeHtml(entry[0]) + '">' + escapeHtml(entry[1]) + '</option>';
+        }).join("");
+        var addProductHtml = '<section class="admin-panel admin-add-product"><div class="admin-panel-heading"><div><span class="eyebrow eyebrow-light">Expand the flower table</span><h3>Add a new bouquet</h3></div></div><form id="admin-product-form" class="admin-product-form"><label>Flower name<input name="name" required minlength="2" maxlength="70" placeholder="e.g. Morning Peonies"></label><label>Category<select name="category"><option value="bright">Bright & happy</option><option value="romance">Roses & romance</option><option value="signature">Signature</option></select></label><label>Price (PHP)<input name="price" type="number" min="1" max="100000" step="1" required></label><label>Initial stock<input name="stock" type="number" min="0" max="5000" step="1" value="0" required></label><label>Shop photo<select name="image">' + imageOptions + '</select></label><label>Product tag<input name="tag" maxlength="32" value="New arrival" required></label><label class="admin-product-description">Description<textarea name="description" rows="2" minlength="10" maxlength="280" required placeholder="Describe the flowers, colours, and occasion."></textarea></label><button class="button button-dark admin-save-button" type="submit">Add to shop <span>+</span></button></form></section>';
+        root.innerHTML = statsHtml + addProductHtml + '<div class="admin-panel-grid"><section class="admin-panel"><div class="admin-panel-heading"><div><span class="eyebrow eyebrow-light">Order fulfilment</span><h3>Recent orders</h3></div><span>' + orders.length + ' shown</span></div>' + orderHtml + '</section><section class="admin-panel"><div class="admin-panel-heading"><div><span class="eyebrow eyebrow-light">Stock control</span><h3>Flower inventory</h3></div><span>' + Number(summary.soldOutProducts || 0) + ' sold out · updates show in shop</span></div>' + productHtml + '</section></div>';
     }
 
     async function loadAdmin() {
@@ -450,6 +460,23 @@
             notify(error.message);
         }
     }
+
+    document.getElementById("admin-content").addEventListener("submit", async function (event) {
+        if (!event.target.matches("#admin-product-form")) return;
+        event.preventDefault();
+        var button = event.target.querySelector('button[type="submit"]');
+        button.disabled = true;
+        try {
+            await api("admin_add_product", formData(event.target));
+            await refreshState();
+            await loadAdmin();
+            notify("The new bouquet is available in the shop.");
+        } catch (error) {
+            notify(error.message);
+        } finally {
+            button.disabled = false;
+        }
+    });
 
     function showPage(nextPage) {
         if (nextPage === "admin" && !(state.user && state.user.isAdmin)) {
