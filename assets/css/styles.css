@@ -493,6 +493,85 @@ html[data-theme="dark"] .cart-shortcut b { background: #e0a79d; color: #18251e; 
     .add-button, .newsletter-form button, .text-button { min-height: 44px; font-size: 11px; }
     .pagination-controls button { min-width: 40px; min-height: 40px; }
 }
+
+/* Make prices and seeded review details easy to spot in either colour scheme. */
+.product-price {
+    display: inline-block;
+    padding: 6px 9px;
+    border: 1px solid #c9d0c1;
+    border-radius: 2px;
+    background: #edf0e7;
+    color: #24382d;
+    font-size: 14px;
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+}
+.product-photo-link {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+.product-tag { pointer-events: none; }
+.rating-summary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    margin: 3px 0 7px;
+    padding: 3px 0;
+    border: 0;
+    background: transparent;
+    color: #536353;
+    text-align: left;
+    font: 11px/1.4 var(--sans);
+    cursor: pointer;
+}
+.rating-summary:hover { color: #9c554e; }
+.rating-summary b { color: #263c31; font-size: 12px; }
+.rating-stars { color: #b56f43; letter-spacing: .08em; white-space: nowrap; }
+.reviews-modal {
+    position: relative;
+    width: min(100%, 560px);
+    max-height: min(90vh, 780px);
+    overflow: auto;
+    padding: 34px clamp(24px, 6vw, 48px) 32px;
+    background: linear-gradient(rgba(250,248,242,.96),rgba(250,248,242,.98)),url("../images/studio-bouquet.jpg") center / cover;
+    color: #263c31;
+    box-shadow: 0 22px 75px rgba(24,37,29,.3);
+}
+.reviews-modal::before { content: ""; position: absolute; inset: 8px; border: 1px solid #e8e2d5; pointer-events: none; }
+.reviews-modal > .eyebrow { display: block; margin-bottom: 7px; }
+.reviews-modal h2 { margin: 0 36px 14px 0; font: 500 clamp(30px,5vw,42px)/1.1 var(--serif); letter-spacing: -.04em; }
+.reviews-overview { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; padding: 13px 15px; background: #edf0e7; border: 1px solid #d8ddcf; }
+.reviews-overview strong { font: 600 25px/1 var(--serif); }
+.reviews-overview small { flex-basis: 100%; color: #687266; font-size: 11px; }
+.sample-review-note { margin: 14px 0 5px; color: #687266; font-size: 11px; line-height: 1.55; }
+.product-review-list { display: grid; }
+.customer-review { padding: 14px 0; border-top: 1px solid #dddcd1; }
+.customer-review-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.customer-review-heading b { font: 500 17px var(--serif); }
+.customer-review p { margin: 7px 0 0; color: #515b50; font-size: 13px; line-height: 1.65; }
+.empty-stars { color: #aeb2a5; }
+html[data-theme="dark"] .product-price { color: #fff4df; background: #34483a; border-color: #768471; }
+html[data-theme="dark"] .rating-summary { color: #d2d8ca; }
+html[data-theme="dark"] .rating-summary b { color: #f1eee4; }
+html[data-theme="dark"] .rating-summary:hover { color: #efb9af; }
+html[data-theme="dark"] .reviews-modal { background: linear-gradient(rgba(24,37,30,.96),rgba(24,37,30,.98)),url("../images/studio-bouquet.jpg") center / cover; color: #f1eee4; }
+html[data-theme="dark"] .reviews-modal::before { border-color: #465449; }
+html[data-theme="dark"] .reviews-overview { background: #303e33; border-color: #566557; }
+html[data-theme="dark"] .reviews-overview small, html[data-theme="dark"] .sample-review-note { color: #d0d2c7; }
+html[data-theme="dark"] .customer-review { border-color: #465449; }
+html[data-theme="dark"] .customer-review p { color: #d0d2c7; }
+@media (max-width: 700px) {
+    .product-price { padding: 5px 7px; font-size: 13px; }
+    .rating-summary { font-size: 10px; gap: 4px; }
+    .reviews-modal { padding: 32px 23px 25px; }
+}
 <<<<<<< HEAD
 =======
 
