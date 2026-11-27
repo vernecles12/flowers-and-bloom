@@ -117,11 +117,18 @@
                 title: config.title,
                 text: config.text,
                 icon: config.icon,
-                iconColor: config.iconColor || (config.icon === "error" ? "#c43d45" : "#3f9157"),
+                iconColor: config.iconColor || (
+                    config.icon === "error" ? "#c43d45" :
+                    config.icon === "warning" ? "#a87524" : "#2f8a4c"
+                ),
                 confirmButtonText: config.confirmButtonText,
                 showCancelButton: Boolean(config.showCancelButton),
                 cancelButtonText: config.cancelButtonText,
-                customClass: { popup: "floral-alert" },
+                customClass: {
+                    popup: "floral-alert",
+                    confirmButton: "floral-alert-confirm",
+                    cancelButton: "floral-alert-cancel"
+                },
                 buttonsStyling: false,
                 reverseButtons: true,
                 focusConfirm: true,
@@ -166,7 +173,7 @@
             title: title,
             text: message,
             icon: "success",
-            iconColor: "#3f9157",
+            iconColor: "#2f8a4c",
             confirmButtonText: confirmText || "Lovely"
         });
     }
