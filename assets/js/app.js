@@ -38,26 +38,59 @@
         });
     }
 
-    async function api(action, data) {
-        var options = { method: data ? "POST" : "GET", headers: {} };
+    async function sendApiRequest(action, data) {
+        var options = {
+            method: data ? "POST" : "GET",
+            headers: { "Accept": "application/json" },
+            credentials: "same-origin",
+            cache: "no-store"
+        };
         if (data) {
             options.headers["Content-Type"] = "application/json";
             options.body = JSON.stringify(Object.assign({ csrf: state.csrf }, data));
         }
+
         var response;
         try {
             response = await fetch(apiEndpoint + "?action=" + encodeURIComponent(action), options);
         } catch (error) {
             throw new Error("We couldn’t reach the shop. Check your connection and try again.");
         }
+
         var result;
-        try { result = await response.json(); } catch (error) { throw new Error("The shop couldn’t load that response. Refresh and try again."); }
-        if (!response.ok || result.ok === false) {
-            var requestError = new Error(result.message || "That didn’t work. Please try again.");
-            requestError.status = response.status;
+        try {
+            result = await response.json();
+        } catch (error) {
+            throw new Error("The shop couldn’t load that response. Refresh and try again.");
+        }
+        return { response: response, result: result };
+    }
+
+    async function api(action, data) {
+        var request = await sendApiRequest(action, data);
+
+        // A stale CSRF token can be left in an open tab after the PHP session
+        // is renewed. Fetch a fresh state once, then retry the original POST once.
+        if (data && action !== "state" && request.response.status === 419) {
+            var refreshed = await sendApiRequest("state", null);
+            if (!refreshed.response.ok || refreshed.result.ok === false || !refreshed.result.csrf) {
+                var refreshError = new Error(refreshed.result.message || "Your session could not be refreshed. Please reload the page.");
+                refreshError.status = refreshed.response.status;
+                throw refreshError;
+            }
+            state.csrf = refreshed.result.csrf;
+            state.user = refreshed.result.user || null;
+            state.cart = refreshed.result.cart || { items: [], total: 0, count: 0 };
+            state.orders = refreshed.result.orders || [];
+            request = await sendApiRequest(action, data);
+        }
+
+        if (!request.response.ok || request.result.ok === false) {
+            var requestError = new Error(request.result.message || "That didn’t work. Please try again.");
+            requestError.status = request.response.status;
             throw requestError;
         }
-        return result;
+        return request.result;
     }
 
     function notify(message) {
@@ -252,16 +285,6 @@
         button.disabled = true;
         try {
             var result = await api(action, formData(form));
-            if (action === "register") {
-                var registeredEmail = form.elements.email.value;
-                form.reset();
-                closeModal("auth-modal");
-                switchAuthTab("login");
-                document.querySelector('#login-form [name="email"]').value = registeredEmail;
-                openModal("auth-modal");
-                await floralNotice("Account created", "Your account is ready. Sign in with your email and password to continue.", "Sign in");
-                return;
-            }
             state.user = result.user;
             state.cart = result.cart || { items: [], total: 0, count: 0 };
             state.orders = result.orders || [];
@@ -277,7 +300,14 @@
                 renderAccount();
             }
         } catch (error) {
-            notify(error.message);
+            if (action === "register" && error.status === 409) {
+                var existingEmail = form.elements.email.value;
+                switchAuthTab("login");
+                document.querySelector('#login-form [name="email"]').value = existingEmail;
+                notify("An account with this email already exists. Sign in or use Forgot your password?");
+            } else {
+                notify(error.message);
+            }
         } finally {
             button.disabled = false;
         }
