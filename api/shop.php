@@ -19,19 +19,29 @@ function shop_storage_path(): string
 
 function blob_credentials(): array
 {
-    // Vercel rotates OIDC credentials per request. Prefer the invocation header
-    // so a warm PHP worker never keeps using an expired environment token.
-    $requestToken = trim((string)($_SERVER['HTTP_X_VERCEL_OIDC_TOKEN'] ?? ''));
-    $token = (string)($requestToken ?: (getenv('VERCEL_OIDC_TOKEN') ?: getenv('BLOB_READ_WRITE_TOKEN')));
-    $storeId = (string)getenv('BLOB_STORE_ID');
-    if ($token === '' || $storeId === '') {
-        throw new RuntimeException('Blob credentials are missing.');
+    // This PHP backend uses Vercel's Blob REST endpoints directly. Prefer the
+    // store's configured read/write token; use the invocation OIDC token as a
+    // fallback when a project has been migrated to OIDC-only access.
+    $tokens = [];
+    $candidates = [
+        trim((string)(getenv('BLOB_READ_WRITE_TOKEN') ?: '')),
+        trim((string)($_SERVER['HTTP_X_VERCEL_OIDC_TOKEN'] ?? '')),
+        trim((string)(getenv('VERCEL_OIDC_TOKEN') ?: '')),
+    ];
+    foreach ($candidates as $candidate) {
+        if ($candidate !== '' && !in_array($candidate, $tokens, true)) {
+            $tokens[] = $candidate;
+        }
     }
-    // Vercel's Blob CDN hostname and store-id header use the bare identifier.
+
+    $storeId = trim((string)(getenv('BLOB_STORE_ID') ?: ''));
+    if (!$tokens || $storeId === '') {
+        throw new RuntimeException('Private Blob credentials are not configured for this project.');
+    }
     if (str_starts_with($storeId, 'store_')) {
         $storeId = substr($storeId, 6);
     }
-    return [$token, $storeId];
+    return [$tokens, $storeId];
 }
 
 function blob_request(string $method, string $url, array $headers = [], ?string $body = null): array
@@ -72,6 +82,26 @@ function blob_request(string $method, string $url, array $headers = [], ?string 
     return ['status' => $status, 'headers' => $responseHeaders, 'body' => (string)$responseBody];
 }
 
+function blob_authenticated_request(string $method, string $url, array $headers, ?string $body, array $tokens): array
+{
+    $lastResult = null;
+    foreach ($tokens as $token) {
+        $authenticatedHeaders = array_values(array_filter(
+            $headers,
+            static fn(string $header): bool => stripos($header, 'Authorization:') !== 0
+        ));
+        $authenticatedHeaders[] = 'Authorization: Bearer ' . $token;
+        $lastResult = blob_request($method, $url, $authenticatedHeaders, $body);
+
+        // A project can still be completing an OIDC migration. Try the next
+        // configured credential only for an authentication/authorization error.
+        if (!in_array($lastResult['status'], [401, 403], true)) {
+            return $lastResult;
+        }
+    }
+    return $lastResult ?? ['status' => 503, 'headers' => [], 'body' => 'No Blob credential was available.'];
+}
+
 function blob_object_path(string $path): string
 {
     return implode('/', array_map('rawurlencode', explode('/', $path)));
@@ -79,9 +109,9 @@ function blob_object_path(string $path): string
 
 function blob_read_object(string $path): array
 {
-    [$token, $storeId] = blob_credentials();
+    [$tokens, $storeId] = blob_credentials();
     $url = 'https://' . $storeId . '.private.blob.vercel-storage.com/' . blob_object_path($path) . '?cache=0';
-    $result = blob_request('GET', $url, ['Authorization: Bearer ' . $token]);
+    $result = blob_authenticated_request('GET', $url, [], null, $tokens);
     if ($result['status'] === 404) {
         return ['found' => false, 'body' => '', 'etag' => null];
     }
@@ -89,18 +119,21 @@ function blob_read_object(string $path): array
         $details = json_decode($result['body'], true);
         $reason = is_array($details) ? ($details['error']['message'] ?? $details['message'] ?? '') : '';
         error_log('Flowers and Bloom Blob GET HTTP ' . $result['status'] . ': ' . substr((string)$reason, 0, 240));
-        throw new RuntimeException('Blob read returned HTTP ' . $result['status'] . '.');
+        throw new RuntimeException(
+            $result['status'] === 401 || $result['status'] === 403
+                ? 'Private Blob access was denied. Check that this project uses a token for its configured Blob store.'
+                : 'Blob read failed with HTTP ' . $result['status'] . '.'
+        );
     }
     return ['found' => true, 'body' => $result['body'], 'etag' => $result['headers']['etag'] ?? null];
 }
 
 function blob_write_object(string $path, string $body, ?string $etag = null, bool $allowOverwrite = false, int $ttlDays = 0): array
 {
-    [$token, $storeId] = blob_credentials();
+    [$tokens, $storeId] = blob_credentials();
     $query = http_build_query(['pathname' => $path], '', '&', PHP_QUERY_RFC3986);
     $requestId = $storeId . ':' . (string)round(microtime(true) * 1000) . ':' . bin2hex(random_bytes(6));
     $headers = [
-        'Authorization: Bearer ' . $token,
         'x-api-version: 13',
         'x-api-blob-request-id: ' . $requestId,
         'x-vercel-blob-store-id: ' . $storeId,
@@ -117,7 +150,7 @@ function blob_write_object(string $path, string $body, ?string $etag = null, boo
     if ($ttlDays > 0) {
         $headers[] = 'x-ttl-days: ' . $ttlDays;
     }
-    return blob_request('PUT', 'https://blob.vercel-storage.com/?' . $query, $headers, $body);
+    return blob_authenticated_request('PUT', 'https://blob.vercel-storage.com/?' . $query, $headers, $body, $tokens);
 }
 
 function empty_shop_store(): array
@@ -130,8 +163,8 @@ function vercel_shop_store_snapshot(): array
     try {
         $snapshot = blob_read_object('flowers-and-bloom/shop.json');
     } catch (Throwable $error) {
-        error_log('Flowers and Bloom Blob read: ' . $error->getMessage());
-        fail('Persistent shop storage could not be read (' . $error->getMessage() . ').', 503);
+        error_log('Flowers and Bloom private shop storage read failed: ' . $error->getMessage());
+        fail('The shop could not reach its private storage. Please try again in a moment.', 503);
     }
     if (!$snapshot['found']) {
         return ['store' => empty_shop_store(), 'etag' => null];
@@ -146,7 +179,9 @@ function vercel_shop_store_snapshot(): array
 final class VercelBlobSessionHandler implements SessionHandlerInterface
 {
     private array $etags = [];
+    private bool $readFailed = false;
 
+    public function hasReadFailure(): bool { return $this->readFailed; }
     public function open(string $path, string $name): bool { return true; }
     public function close(): bool { return true; }
 
@@ -157,10 +192,12 @@ final class VercelBlobSessionHandler implements SessionHandlerInterface
 
     public function read(string $id): string|false
     {
+        $this->readFailed = false;
         try {
             $snapshot = blob_read_object($this->pathFor($id));
         } catch (Throwable $error) {
-            error_log('Flowers and Bloom session read: ' . $error->getMessage());
+            $this->readFailed = true;
+            error_log('Flowers and Bloom session read failed: ' . $error->getMessage());
             return false;
         }
         if (!$snapshot['found']) {
@@ -208,16 +245,33 @@ final class VercelBlobSessionHandler implements SessionHandlerInterface
     public function gc(int $max_lifetime): int|false { return 0; }
 }
 
-if (is_vercel_runtime()) {
+$action = $_GET['action'] ?? '';
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+$skipSessionStart = $action === 'catalog' && $method === 'GET';
+
+$blobSessionHandler = null;
+if (is_vercel_runtime() && !$skipSessionStart) {
     ini_set('display_errors', '0');
-    session_set_save_handler(new VercelBlobSessionHandler(), true);
+    $blobSessionHandler = new VercelBlobSessionHandler();
+    session_set_save_handler($blobSessionHandler, true);
 }
 session_set_cookie_params([
     'httponly' => true,
     'secure' => is_vercel_runtime() || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
     'samesite' => 'Lax',
 ]);
-session_start();
+if (!$skipSessionStart) {
+    $sessionStarted = @session_start();
+    if (!$sessionStarted || ($blobSessionHandler !== null && $blobSessionHandler->hasReadFailure())) {
+        error_log('Flowers and Bloom could not restore the private PHP session.');
+        http_response_code(503);
+        echo json_encode([
+            'ok' => false,
+            'message' => 'Your secure shop session could not be restored. Please refresh and try again.',
+        ]);
+        exit;
+    }
+}
 
 function respond(array $payload, int $status = 200): never
 {
@@ -274,7 +328,10 @@ function store_update(callable $callback): mixed
                 return $result;
             }
             if ($write['status'] !== 412) {
-                fail('Shop data could not be saved. Please try again.', 503);
+                $details = json_decode($write['body'], true);
+                $reason = is_array($details) ? ($details['error']['message'] ?? $details['message'] ?? '') : '';
+                error_log('Flowers and Bloom Blob PUT HTTP ' . $write['status'] . ': ' . substr((string)$reason, 0, 240));
+                fail('Your shop data could not be saved. Please try again in a moment.', 503);
             }
         }
         fail('The shop is busy right now. Please try again.', 503);
@@ -351,8 +408,6 @@ function cart_summary(array $store, string $userId): array
     return ['items' => $items, 'total' => $total, 'count' => array_sum(array_column($items, 'quantity'))];
 }
 
-$action = $_GET['action'] ?? '';
-$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $rawBody = file_get_contents('php://input') ?: '';
 $input = json_decode($rawBody ?: '[]', true);
 $input = is_array($input) ? $input : [];
@@ -400,26 +455,67 @@ if ($action === 'register') {
     if (text_length($name) < 2 || text_length($name) > 70) {
         fail('Please enter a name between 2 and 70 characters.');
     }
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || text_length($email) > 254) {
         fail('Please enter a valid email address.');
     }
     if (strlen($password) < 8) {
         fail('Choose a password with at least 8 characters.');
     }
-    $created = store_update(function (&$store) use ($name, $email, $password) {
-        foreach ($store['users'] as $user) {
-            if ($user['email'] === $email) {
-                return ['error' => 'An account already exists for this email.'];
+
+    // If a previous registration response was lost after the account was
+    // committed, retrying the same email/password signs that customer in
+    // instead of creating a duplicate or trapping them at the registration form.
+    $registration = store_update(function (&$store) use ($name, $email, $password) {
+        foreach ($store['users'] as $index => $existing) {
+            if (strtolower((string)($existing['email'] ?? '')) !== $email) {
+                continue;
             }
+            if (!password_verify($password, (string)($existing['password'] ?? ''))) {
+                return ['error' => 'An account already exists for this email. Sign in or reset its password.'];
+            }
+            $welcomeType = !empty($store['users'][$index]['hasLoggedIn']) ? 'back' : 'first';
+            $store['users'][$index]['hasLoggedIn'] = true;
+            return [
+                'user' => $store['users'][$index],
+                'welcomeType' => $welcomeType,
+                'created' => false,
+            ];
         }
-        $user = ['id' => bin2hex(random_bytes(12)), 'name' => $name, 'email' => $email, 'password' => password_hash($password, PASSWORD_DEFAULT), 'hasLoggedIn' => false, 'createdAt' => date(DATE_ATOM), 'reset' => null];
+
+        $user = [
+            'id' => bin2hex(random_bytes(12)),
+            'name' => $name,
+            'email' => $email,
+            'password' => password_hash($password, PASSWORD_DEFAULT),
+            'hasLoggedIn' => true,
+            'createdAt' => date(DATE_ATOM),
+            'reset' => null,
+        ];
         $store['users'][] = $user;
-        return $user;
+        return ['user' => $user, 'welcomeType' => 'first', 'created' => true];
     });
-    if (isset($created['error'])) {
-        fail($created['error'], 409);
+
+    if (isset($registration['error'])) {
+        fail($registration['error'], 409);
     }
-    respond(['ok' => true, 'message' => 'Your account is ready. Please sign in to continue.']);
+
+    session_regenerate_id(true);
+    $_SESSION['user_id'] = $registration['user']['id'];
+    $authenticatedStore = store_read();
+    $orders = array_values(array_filter(
+        $authenticatedStore['orders'],
+        fn($order) => $order['userId'] === $registration['user']['id']
+    ));
+
+    respond([
+        'ok' => true,
+        'created' => $registration['created'],
+        'message' => $registration['created'] ? 'Your account is ready.' : 'Welcome back. You are signed in.',
+        'user' => public_user($registration['user']),
+        'welcomeType' => $registration['welcomeType'],
+        'cart' => cart_summary($authenticatedStore, $registration['user']['id']),
+        'orders' => array_reverse($orders),
+    ]);
 }
 
 if ($action === 'login') {
