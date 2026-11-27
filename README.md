@@ -56,3 +56,10 @@ If a private-session read fails, the API returns a temporary storage/session err
 ## Deployment checks
 
 After updating the code, verify the production and preview Vercel projects use the intended private store. Do not delete or recreate the store to troubleshoot a 403: that could separate the website from its existing customer and order records.
+
+
+## Cyan storefront and SweetAlert updates
+
+The `flowers-and-bloom-cyan.vercel.app` project shares the existing populated **private** Blob store used by `flowers-and-bloom-live`. Keep both `BLOB_STORE_ID` and `BLOB_READ_WRITE_TOKEN` aligned in the cyan project's production, preview, and development environments. Do not make customer data public.
+
+SweetAlert notices use a green success check for successful sign-in and completed actions. Authentication-required actions use a red error cross and provide a sign-in action. Alert buttons use high-contrast labels, larger hit areas, and reduced-motion-aware transitions.
