@@ -25,9 +25,9 @@ The Vercel project uses a private Blob store for accounts, carts, orders, newsle
 - Add products, change quantities, and place orders after signing in.
 - Edit profile details, change the password, upload or remove a private profile photo, and review saved orders.
 - Join the flower notes list; email addresses are validated, stored privately, and de-duplicated.
-- Pay for orders on delivery, or use PayMongo-hosted GCash and debit-card checkout.
+- Save orders with a cash-on-delivery, manual GCash-transfer, or debit-card-at-delivery preference.
 
-Password reset codes are displayed on screen for this demo. The app also attempts to email the code through PHP `mail()` when mail is configured. Cash-on-delivery orders are saved by the shop. GCash and card payments redirect to PayMongo's hosted checkout; no card details are collected by this app. Online checkout stays unavailable until `PAYMONGO_SECRET_KEY` and `PAYMONGO_WEBHOOK_SECRET` are set. Use a PayMongo test secret key first, and register `https://your-domain/api/shop.php?action=paymongo_webhook` for `checkout_session.payment.paid`. Set `APP_BASE_URL` to the public HTTPS site URL if Vercel's automatic URL is not the address customers use. Payment success is confirmed by a signed webhook, never by the browser return alone.
+Password reset codes are displayed on screen for this demo. The app also attempts to email the code through PHP `mail()` when mail is configured. Orders save the customer's payment preference. Payment is not collected or confirmed by this site: GCash transfers need details from the shop and manual confirmation, and debit-card payment is only at delivery if the shop has a card terminal. Card details are never requested. Cash on delivery is available without a payment provider.
 
 ## Project files
 
@@ -37,7 +37,6 @@ Password reset codes are displayed on screen for this demo. The app also attempt
 - `api/lib/catalog.php` - product catalogue and customer-friendly descriptions
 - `api/lib/newsletter.php` - private newsletter subscription storage
 - `assets/images/payment-*.svg` - local payment method marks
-- `.env.example` - local configuration names for PayMongo hosted checkout
 - `api/index.php` - Vercel storefront entry point
 - `assets/css/styles.css` and `assets/js/app.js` - responsive UI and interactions
 - `assets/images/` - local JPG backgrounds and flower photography
