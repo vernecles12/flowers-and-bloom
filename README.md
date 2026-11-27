@@ -63,3 +63,8 @@ After updating the code, verify the production and preview Vercel projects use t
 The `flowers-and-bloom-cyan.vercel.app` project shares the existing populated **private** Blob store used by `flowers-and-bloom-live`. Keep both `BLOB_STORE_ID` and `BLOB_READ_WRITE_TOKEN` aligned in the cyan project's production, preview, and development environments. Do not make customer data public.
 
 SweetAlert notices use a green success check for successful sign-in and completed actions. Authentication-required actions use a red error cross and provide a sign-in action. Alert buttons use high-contrast labels, larger hit areas, and reduced-motion-aware transitions.
+
+
+## SweetAlert contrast and semantic success states
+
+The `flowers-and-bloom-live.vercel.app` hostname is attached to the `flowers-and-bloom-live` Vercel project. Keep that project connected to the populated private Blob store. SweetAlert and its custom fallback share the same semantic states: green for success, red for errors, and amber for warnings. Confirm buttons use white text on dark green; cancel buttons use dark-green text on a pale background. Button hover and press transitions respect reduced-motion preferences.

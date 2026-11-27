@@ -125,7 +125,7 @@
                 showCancelButton: Boolean(config.showCancelButton),
                 cancelButtonText: config.cancelButtonText,
                 customClass: {
-                    popup: "floral-alert",
+                    popup: "floral-alert floral-alert-" + config.icon,
                     confirmButton: "floral-alert-confirm",
                     cancelButton: "floral-alert-cancel"
                 },
@@ -139,14 +139,18 @@
 
         return new Promise(function (resolve) {
             var layer = document.createElement("div");
-            layer.className = "modal-backdrop floral-fallback-backdrop";
+            layer.className = "modal-backdrop floral-fallback-backdrop floral-fallback-alert-" + config.icon;
             var symbol = config.icon === "error" ? "×" : (config.icon === "success" ? "✓" : "!");
-            var iconClass = config.icon === "error" ? "floral-fallback-icon floral-fallback-error" : "floral-fallback-icon floral-fallback-success";
+            var iconClass = config.icon === "error"
+                ? "floral-fallback-icon floral-fallback-error"
+                : (config.icon === "warning" ? "floral-fallback-icon floral-fallback-warning" : "floral-fallback-icon floral-fallback-success");
             layer.innerHTML = '<section class="floral-fallback-card" role="dialog" aria-modal="true"><div class="' + iconClass + '" aria-hidden="true"></div><h2></h2><p></p><div class="floral-fallback-actions"><button type="button" data-confirm></button></div></section>';
             layer.querySelector(".floral-fallback-icon").textContent = symbol;
             layer.querySelector("h2").textContent = config.title;
             layer.querySelector("p").textContent = config.text;
-            layer.querySelector("[data-confirm]").textContent = config.confirmButtonText;
+            var confirmButton = layer.querySelector("[data-confirm]");
+            confirmButton.textContent = config.confirmButtonText;
+            confirmButton.classList.add("floral-fallback-confirm");
             if (config.showCancelButton) {
                 var cancel = document.createElement("button");
                 cancel.type = "button";
