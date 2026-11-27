@@ -37,7 +37,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .main-nav { display: flex; align-items: center; gap: clamp(20px,3vw,43px); height: 100%; }
 .nav-link { height: 100%; display: inline-flex; align-items: center; color: #686d63; font-size: 12px; letter-spacing: .015em; position: relative; transition: color .2s; }
 .nav-link:hover, .nav-link.active { color: var(--ink); }
-.shop-link-disabled { opacity: .48; cursor: not-allowed !important; pointer-events: none; }
 .nav-link.active::after { content: ""; height: 1px; background: #b77970; position: absolute; bottom: 21px; left: 0; right: 0; }
 .header-actions { display: flex; align-items: center; gap: 19px; }
 .icon-button, .cart-shortcut { display: inline-flex; align-items: center; justify-content: center; border: 0; padding: 0; background: none; cursor: pointer; color: var(--ink); }
