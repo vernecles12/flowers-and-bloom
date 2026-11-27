@@ -17,7 +17,7 @@ function shop_admin_emails(): array
             $configured = (string)file_get_contents($localFile);
         }
     }
-    $values = preg_split('/[\\s,;]+/', strtolower($configured), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+    $values = preg_split('/[\s,;]+/', strtolower($configured), -1, PREG_SPLIT_NO_EMPTY) ?: [];
     $emails = [];
     foreach ($values as $email) {
         $email = trim($email);
