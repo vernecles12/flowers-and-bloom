@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f9f6ee">
     <meta name="description" content="Hand-tied flowers for birthdays, ordinary Tuesdays, and all the days in between. Made with care in Metro Manila.">
     <title>Flowers and Bloom | A little joy, sent your way</title>
-    <link rel="stylesheet" href="assets/css/styles.css?v=stamp-contrast-20261127">
+    <link rel="stylesheet" href="assets/css/styles.css?v=shop-page-nav-20261127">
 </head>
 <body>
     <div class="announcement">Fresh bunches, delivered around Metro Manila <span>✿</span></div>
