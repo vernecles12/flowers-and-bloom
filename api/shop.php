@@ -390,22 +390,6 @@ function require_user(array $store): array
     return $user;
 }
 
-function is_shop_admin(array $user): bool
-{
-    $configured = (string)(getenv('ADMIN_EMAILS') ?: '');
-    $emails = array_filter(array_map(static fn($email) => strtolower(trim($email)), explode(',', $configured)));
-    return in_array(strtolower((string)($user['email'] ?? '')), $emails, true);
-}
-
-function require_shop_admin(array $store): array
-{
-    $user = require_user($store);
-    if (!is_shop_admin($user)) {
-        fail('You do not have permission to access the studio dashboard.', 403);
-    }
-    return $user;
-}
-
 function cart_summary(array $store, string $userId): array
 {
     $items = [];
@@ -445,50 +429,11 @@ if ($action === 'state' && $method === 'GET') {
     respond(['ok' => true, 'csrf' => $_SESSION['csrf'], 'user' => $user ? public_user($user) : null, 'products' => products(), 'cart' => $cart, 'orders' => array_reverse($orders)]);
 }
 
-if ($action === 'admin_overview' && $method === 'GET') {
-    $store = store_read();
-    $admin = require_shop_admin($store);
-    $usersById = [];
-    foreach ($store['users'] as $customer) {
-        $usersById[$customer['id']] = ['name' => $customer['name'] ?? 'Customer', 'email' => $customer['email'] ?? ''];
-    }
-    $orders = array_map(static function ($order) use ($usersById) {
-        $order['customer'] = $usersById[$order['userId'] ?? ''] ?? ['name' => 'Guest', 'email' => ''];
-        return $order;
-    }, $store['orders']);
-    usort($orders, static fn($a, $b) => strcmp((string)($b['createdAt'] ?? ''), (string)($a['createdAt'] ?? '')));
-    $revenue = array_sum(array_map(static fn($order) => (int)($order['total'] ?? 0), array_filter($orders, static fn($order) => !in_array($order['status'] ?? '', ['Cancelled', 'Refunded'], true))));
-    respond(['ok' => true, 'admin' => ['name' => $admin['name'], 'email' => $admin['email']], 'stats' => ['orders' => count($orders), 'customers' => count($store['users']), 'revenue' => $revenue, 'openOrders' => count(array_filter($orders, static fn($order) => !in_array($order['status'] ?? '', ['Delivered', 'Cancelled', 'Refunded'], true)))], 'orders' => $orders]);
-}
-
 if ($method !== 'POST') {
     fail('Unsupported request.', 405);
 }
 if (!isset($_SESSION['csrf']) || !hash_equals($_SESSION['csrf'], (string)($input['csrf'] ?? ''))) {
     fail('Your session has expired. Refresh the page and try again.', 419);
-}
-
-if ($action === 'admin_update_order') {
-    $store = store_read();
-    require_shop_admin($store);
-    $orderId = trim((string)($input['orderId'] ?? ''));
-    $status = trim((string)($input['status'] ?? ''));
-    $allowedStatuses = ['Received', 'Preparing', 'Ready for dispatch', 'Out for delivery', 'Delivered', 'Cancelled'];
-    if ($orderId === '' || !in_array($status, $allowedStatuses, true)) {
-        fail('Choose a valid order and status.');
-    }
-    $updated = store_update(function (&$data) use ($orderId, $status) {
-        foreach ($data['orders'] as &$order) {
-            if (($order['id'] ?? '') === $orderId) {
-                $order['status'] = $status;
-                $order['updatedAt'] = date(DATE_ATOM);
-                return $order;
-            }
-        }
-        return null;
-    });
-    if (!$updated) fail('That order could not be found.', 404);
-    respond(['ok' => true, 'order' => $updated, 'message' => 'Order status updated.']);
 }
 
 if ($action === 'newsletter_subscribe') {
