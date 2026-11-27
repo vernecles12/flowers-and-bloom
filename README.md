@@ -74,7 +74,7 @@ The `flowers-and-bloom-live.vercel.app` hostname is attached to the `flowers-and
 
 - Search and sort the flower catalogue by name, category, price, and rating.
 - Save favourite bouquets to a customer-specific wishlist. Saved flowers are stored in the private shop data and require sign-in.
-- Stock counts are shown on product cards. New catalogue items start with 12 units until staff changes the count. Adding to a cart and checking out validates current stock; successful orders reserve the purchased quantities.
+- Stock counts are shown on product cards. New catalogue items start with 12 units until staff changes the count. Adding to a cart and checking out validates current stock; successful orders reserve the purchased quantities. Cancelling a post-inventory order returns its reserved units; older orders made before inventory tracking are not restocked automatically.
 - Customer order pages show a fulfilment timeline, recipient and delivery details, payment status, item list, and saved status updates.
 - A private studio dashboard shows order/customer summaries, low-stock counts, recent orders, order-status controls, and inventory editing.
 
