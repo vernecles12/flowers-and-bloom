@@ -569,6 +569,7 @@
         } catch (error) {
             if (error.status === 401) {
                 state.user = null;
+                setHeader();
                 await askToSignIn("Your session has expired. Please sign in first to add this flower to your cart.", productId);
             } else {
                 await floralAlert({
